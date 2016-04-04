@@ -7,6 +7,7 @@
   "browser":true,
   "browserify":true,
   "curly":true,
+  "devel": true,
   "eqeqeq":true,
   "funcscope":true,
   "jasmine":true,
@@ -22,6 +23,7 @@
   "esnext":true,
   "globals":{
     "jquery": true,
+    "jasmine": true,
     "$": true
   },
   "globalstrict":false,
@@ -29,7 +31,19 @@
   "newcap":true,
   "plusplus":true,
   "predef":[
-    "$"
+    "$",
+    "describe",
+    "xdescribe",
+    "before",
+    "beforeEach",
+    "after",
+    "afterEach",
+    "it",
+    "xit",
+    "it",
+    "inject",
+    "expect",
+    "spyOn"
   ],
   "phantom":true,
   "shadow":true,
