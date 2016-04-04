@@ -60,4 +60,4 @@ gulp.task("jasmine", function() {
 });
 
 
-gulp.task("test", ["jsonlint", "jshint", "jscs"]);
+gulp.task("test", ["jsonlint", "jshint", "jscs", "jasmine"]);

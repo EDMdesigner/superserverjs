@@ -29,6 +29,7 @@
   },
   "homepage": "https://github.com/EDMdesigner/superdata-server#readme",
   "devDependencies": {
+    "body-parser": "^1.15.0",
     "gulp": "^3.9.1",
     "gulp-jasmine": "^2.3.0",
     "gulp-jscs": "^3.0.2",
@@ -37,7 +38,8 @@
     "gulp-jsonlint": "^1.1.2",
     "jasmine": "^2.4.1",
     "jshint": "^2.9.1",
-    "jshint-stylish": "^2.1.0"
+    "jshint-stylish": "^2.1.0",
+    "supertest": "^1.2.0"
   },
   "dependencies": {
     "express": "^4.13.4"

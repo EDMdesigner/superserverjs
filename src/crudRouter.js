@@ -1,8 +1,36 @@
 var express = require("express");
 
 module.exports = function createCRUDRouter(config) {
-	var router = config.router || express.Router();
+	config = config || {};
+
+	if (!config.proxy) {
+		throw new Error("config.proxy is mandatory");
+	}
+
 	var proxy = config.proxy;
+
+	if (typeof proxy.read !== "function") {
+		throw new Error("config.proxy.read must be a function");
+	}
+
+	if (typeof proxy.createOne !== "function") {
+		throw new Error("config.proxy.createOne must be a function");
+	}
+
+	if (typeof proxy.readOneById !== "function") {
+		throw new Error("config.proxy.readOneById must be a function");
+	}
+
+	if (typeof proxy.updateOneById !== "function") {
+		throw new Error("config.proxy.updateOneById must be a function");
+	}
+
+	if (typeof proxy.destroyOneById !== "function") {
+		throw new Error("config.proxy.destroyOneById must be a function");
+	}
+
+
+	var router = config.router || express.Router();
 
 	function createResponseHandler(res) {
 		return function handleResponse(err, result) {
@@ -13,11 +41,6 @@ module.exports = function createCRUDRouter(config) {
 			res.json(result);
 		};
 	}
-
-	router.use(function(req, res, next) {
-		console.log(Date(), req.url);
-		next();
-	});
 
 	function intify(value, defaultValue) {
 		value = parseInt(value, 10);
@@ -42,7 +65,6 @@ module.exports = function createCRUDRouter(config) {
 	router.get("/", function(req, res) {
 		var query = {}; //TODO sophisticate this!
 
-
 		if (req.query) {
 			query = req.query;
 		}
@@ -53,9 +75,6 @@ module.exports = function createCRUDRouter(config) {
 		query.skip = intify(query.skip, 0);
 		query.limit = intify(query.limit, 10);
 
-
-
-		console.log(req.query);
 		proxy.read(query, createResponseHandler(res));
 	});
 
