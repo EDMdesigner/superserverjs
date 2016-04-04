@@ -8,6 +8,7 @@ module.exports = function createFileProxy(config) {
 	}
 
 	var basePath = config.basePath;
+	var encoding = config.encoding;
 
 	var generateId = config.generateId || (function() {
 		var nextId = 0;
@@ -18,25 +19,34 @@ module.exports = function createFileProxy(config) {
 
 	function read(query, callback) {
 		fs.readdir(basePath, function(err, data) {
-			callback(err, data);
+			if (err) {
+				return callback(err);
+			}
+
+			//TODO filter the resultset
+
+			callback(null, {
+				items: data,
+				count: data.length
+			});
 		});
 	}
 
 	function createOne(data, callback) {
 		var id = generateId();
-		fs.writeFile(basePath + id, data, function(err) {
+		fs.writeFile(basePath + id, data, encoding, function(err) {
 			callback(err);
 		});
 	}
 
 	function readOneById(id, callback) {
-		fs.readFile(basePath + id, function(err, data) {
+		fs.readFile(basePath + id, encoding, function(err, data) {
 			callback(err, data);
 		});
 	}
 
 	function updateOneById(id, newData, callback) {
-		fs.writeFile(basePath + id, newData, function(err) {
+		fs.writeFile(basePath + id, newData, encoding, function(err) {
 			callback(err);
 		});
 	}
