@@ -15,10 +15,12 @@
     "server",
     "router",
     "REST",
+    "CRUD",
     "proxy",
     "mongodb",
     "file",
-    "s3"
+    "s3",
+    "express"
   ],
   "author": "EDMdesigner",
   "license": "MIT",
@@ -34,5 +36,8 @@
     "gulp-jsonlint": "^1.1.2",
     "jshint": "^2.9.1",
     "jshint-stylish": "^2.1.0"
+  },
+  "dependencies": {
+    "express": "^4.13.4"
   }
 }
