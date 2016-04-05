@@ -29,12 +29,10 @@ module.exports = function createMongoProxy(config) {
 	});
 
 	function read(query, callback) {
-		Model.find(function(err, data) {
+		Model.find(query, function(err, data) {
 			if (err) {
 				return callback(err);
 			}
-
-			// TODO: filter result
 
 			callback(null, {
 				items: data,
