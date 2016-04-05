@@ -1,4 +1,5 @@
 var fs = require("fs");
+var crypto = require("crypto");
 
 module.exports = function createFileProxy(config) {
 	config = config || {};
@@ -7,13 +8,31 @@ module.exports = function createFileProxy(config) {
 		throw new Error("config.basePath is mandatory");
 	}
 
+	if (!config.idProperty) {
+		throw new Error("config.idProperty is mandatory");
+	}
+
+	var idProperty = config.idProperty;
 	var basePath = config.basePath;
 	var encoding = config.encoding;
 
+	fs.mkdir(basePath, function() {
+	});
+
+	if (basePath[basePath.length - 1] !== "/") {
+		basePath += "/";
+	}
+
 	var generateId = config.generateId || (function() {
-		var nextId = 0;
+		var md5 = crypto.createHash("md5");
+		var nextNum = 0;
 		return function() {
-			return nextId += 1;
+			var now = new Date();
+			md5.update(now.toString() + nextNum);
+
+			nextNum += 1;
+
+			return md5.digest("hex");
 		};
 	}());
 
@@ -26,7 +45,11 @@ module.exports = function createFileProxy(config) {
 			//TODO filter the resultset
 
 			callback(null, {
-				items: data,
+				items: data.map(function(item) {
+					var retObj = {};
+					retObj[idProperty] = item;
+					return retObj;
+				}),
 				count: data.length
 			});
 		});
@@ -35,7 +58,9 @@ module.exports = function createFileProxy(config) {
 	function createOne(data, callback) {
 		var id = generateId();
 		fs.writeFile(basePath + id, data, encoding, function(err) {
-			callback(err);
+			var retObj = {};
+			retObj[idProperty] = id;
+			callback(err, retObj);
 		});
 	}
 
@@ -46,6 +71,7 @@ module.exports = function createFileProxy(config) {
 	}
 
 	function updateOneById(id, newData, callback) {
+		//should check if it exists.
 		fs.writeFile(basePath + id, newData, encoding, function(err) {
 			callback(err);
 		});
