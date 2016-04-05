@@ -29,7 +29,7 @@ module.exports = function createMongoProxy(config) {
 	});
 
 	function read(query, callback) {
-		Model.find(function(err, result) {
+		Model.find(function(err, data) {
 			if (err) {
 				return callback(err);
 			}
