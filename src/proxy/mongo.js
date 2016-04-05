@@ -9,7 +9,7 @@ module.exports = function createMongoProxy(config) {
 	config = config || {};
 
 	if (typeof config.mongoUrl !== "string") {
-		throw new Error("config.mongoUrl is mandatory");
+		throw new Error("config.mongoUrl is mandatory!");
 	}
 
 	if (typeof config.model !== "object") {
