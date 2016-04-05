@@ -31,3 +31,27 @@ app.use("/test", createCrudRouter({
 	})
 }));
 ```
+
+## fileProxy
+
+The file proxy is responsible for handling files in a directory. As other proxies, it also follows the CRUD logic.
+
+### Params
+
+Param	| Type	| Required	| Default value	| Description
+---		| ---	| ---		| ---			| ---
+basePath | string | Yes | | The path of the directory in which the fileProxy will handle files.
+idProperty | string | Yes | | The name of the id propery. (eg.: "id", "_id", "customId")
+encoding | string | No | | The encoding of the files to handle. (eg.: "utf8")
+
+
+### Example
+
+```javascript
+var createFileProxy = require("superdata-server").proxy.file;
+proxy = createFileProxy({
+	basePath: "testFolder",
+	idProperty: "myVeryId",
+	encoding: "utf8"
+});
+```
