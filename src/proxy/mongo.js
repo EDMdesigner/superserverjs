@@ -2,6 +2,8 @@
  * MongoDB proxy 
  */
 
+var async = require("async");
+
 module.exports = function createMongoProxy(config) {
 
 	config = config || {};
@@ -13,15 +15,30 @@ module.exports = function createMongoProxy(config) {
 	var Model = config.model;
 
 	function read(query, callback) {
-		Model.find(query, function(err, data) {
+		async.parallel({
+			items: getItems.bind(null, query),
+			count: getItemCount.bind(null, query)
+		}, function(err, result) {
 			if (err) {
 				return callback(err);
 			}
 
 			callback(null, {
-				items: data,
-				count: data.length
+				items: result.items,
+				count: result.count
 			});
+		});
+	}
+
+	function getItems(query, done) {
+		Model.find(query, function(err, result) {
+			done(err, result);
+		});
+	}
+
+	function getItemCount(query, done) {
+		Model.count(query, function(err, result) {
+			done(err, result);
 		});
 	}
 
