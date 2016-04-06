@@ -2,31 +2,15 @@
  * MongoDB proxy 
  */
 
-var mongoose = require("mongoose");
-
 module.exports = function createMongoProxy(config) {
-	
+
 	config = config || {};
 
-	if (typeof config.mongoUrl !== "string") {
-		throw new Error("config.mongoUrl is mandatory!");
-	}
-
-	if (typeof config.model !== "object") {
+	if (!config.model) {
 		throw new Error("config.model is mandatory!");
 	}
 
 	var Model = config.model;
-
-	mongoose.connect(config.mongoUrl);
-
-	mongoose.connection.on("error", function() {
-		console.error("Mongoose connection error");
-	});
-
-	mongoose.connection.on("open", function() {
-		console.log("Mongoose connection successful");
-	});
 
 	function read(query, callback) {
 		Model.find(query, function(err, data) {
