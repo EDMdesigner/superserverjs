@@ -76,7 +76,7 @@ var createMongoProxy = require("superdata-server").proxy.mongo;
 var schema = new mongoose.Schema({ ... });
 var model = mongoose.model("...", schema);
 
-proxy = createMongoProxy({
+var proxy = createMongoProxy({
 	model: model
 });
 ```
