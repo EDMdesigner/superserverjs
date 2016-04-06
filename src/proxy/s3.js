@@ -1,5 +1,5 @@
-var fs = require("fs");
-var crypto = require("crypto");
+// var fs = require("fs");
+// var crypto = require("crypto");
 var AWS = require("aws-sdk");
 
 AWS.config.update({
@@ -15,75 +15,74 @@ module.exports = function createFileProxy(config) {
 		throw new Error("config.idProperty is mandatory");
 	}
 
-	var idProperty = config.idProperty;
-	var basePath = config.basePath;
-	var encoding = config.encoding;
+	// var idProperty = config.idProperty;
+	// var basePath = config.basePath;
+	// var encoding = config.encoding;
 
-	var generateId = config.generateId || (function() {
-		var md5 = crypto.createHash("md5");
-		var nextNum = 0;
+	// var generateId = config.generateId || (function() {
+	// 	var md5 = crypto.createHash("md5");
+	// 	var nextNum = 0;
 
-		return function() {
-			var now = new Date();
+	// 	return function() {
+	// 		var now = new Date();
 
-			md5.update(now.toString() + nextNum);
+	// 		md5.update(now.toString() + nextNum);
 
-			nextNum += 1;
+	// 		nextNum += 1;
 
-			return md5.digest("hex");
-		};
-	}());
+	// 		return md5.digest("hex");
+	// 	};
+	// }());
 
 
 
-	function read(query, callback) {
+	// function read(query, callback) {
 
-	}
+	// }
 
-	function createOne(data, callback) {
+	// function createOne(data, callback) {
 
-		var s3bucket = new AWS.S3({
-			params: {
-				Bucket: "edm-testbucket"
-			}
-		});
+	// 	var s3bucket = new AWS.S3({
+	// 		params: {
+	// 			Bucket: "edm-testbucket"
+	// 		}
+	// 	});
 
-		s3bucket.createBucket(function() {
-			var params = {
-				Key: generateId(),
-				Body: data
-			};
+	// 	s3bucket.createBucket(function() {
+	// 		var params = {
+	// 			Key: generateId(),
+	// 			Body: data
+	// 		};
 
-			s3bucket.upload(params, function(err, data) {
-				if (err) {
-					callback(err);
-				} else {
-					// console.log(data);
-					var retObj = {};
+	// 		s3bucket.upload(params, function(err, data) {
+	// 			if (err) {
+	// 				callback(err);
+	// 			} else {
+	// 				// console.log(data);
 
-					callback(null, data);
-				}
-			});
-		});
-	}
+	// 				callback(null, data);
+	// 			}
+	// 		});
+	// 	});
+	// }
 
-	function readOneById(id, callback) {
+	// function readOneById(id, callback) {
 
-	}
+	// }
 
-	function updateOneById(id, newData, callback) {
-		
-	}
+	// function updateOneById(id, newData, callback) {
 
-	function destroyOneById(id, callback) {
-		
-	}
+	// }
 
-	return {
-		read: read,
-		createOne: createOne,
-		readOneById: readOneById,
-		updateOneById: updateOneById,
-		destroyOneById: destroyOneById
-	};
+	// function destroyOneById(id, callback) {
+
+	// }
+
+	// return {
+	// 	read: read,
+	// 	createOne: createOne,
+	// 	readOneById: readOneById,
+	// 	updateOneById: updateOneById,
+	// 	destroyOneById: destroyOneById
+	// };
 };
