@@ -55,3 +55,28 @@ proxy = createFileProxy({
 	encoding: "utf8"
 });
 ```
+
+## mongoProxy
+
+mongoProxy is responsible for handling data stored in MongoDB. As other proxies, it also follows the CRUD logic.
+
+### Params
+
+Param	| Type	| Required	| Default value	| Description
+---		| ---	| ---		| ---			| ---
+model | Mongoose model | Yes | | Mongoose object model
+
+
+### Example
+
+```javascript
+var mongoose = require("mongoose");
+var createMongoProxy = require("superdata-server").proxy.mongo;
+
+var schema = new mongoose.Schema({ ... });
+var model = mongoose.model("...", schema);
+
+proxy = createMongoProxy({
+	model: model
+});
+```
