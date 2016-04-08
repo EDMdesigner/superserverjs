@@ -10,7 +10,15 @@ module.exports = function createGalleryRouter(config) {
 	var infoProxy = config.infoProxy;
 	
 	router.get("/", function(req, res) {
-		//list
+		var query = req.query || {};
+
+		query.find = objectify(query.find);
+		query.sort = objectify(query.sort);
+
+		query.skip = intify(query.skip, 0);
+		query.limit = intify(query.limit, 10);
+
+		binaryProxy.read(query, createResponseHandler(res));
 	});
 
 	router.post("/", function(req, res) {
