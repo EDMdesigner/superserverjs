@@ -7,6 +7,7 @@ var objectify = routerUtils.objectify;
 var intify = routerUtils.intify;
 var createResponseHandler = routerUtils.createResponseHandler;
 
+
 module.exports = function createGalleryRouter(config) {
 	config = config || {};
 
@@ -22,7 +23,7 @@ module.exports = function createGalleryRouter(config) {
 		msgPrefix: "config.infoProxy"
 	});
 
-	//var binaryProxy = config.binaryProxy;
+	var binaryProxy = config.binaryProxy;
 	var infoProxy = config.infoProxy;
 	
 	router.get("/", function(req, res) {
@@ -37,11 +38,23 @@ module.exports = function createGalleryRouter(config) {
 		infoProxy.read(query, createResponseHandler(res));
 	});
 
-	/*
 	router.post("/", function(req, res) {
-		//createOne
+		console.log(req.file);
+		binaryProxy.createOne(req.file, function(err, binData) {
+			if (err) {
+				return res.send(err);
+			}
+			console.log(binData);
+			infoProxy.createOne(req.file, function(err, infData) {
+				if (err) {
+					return console.log(err);
+				}
+				res.send(infData);
+			});
+		});
 	});
 
+	/*
 	router.get("/:id", function(req, res) {
 		//readOneById
 	});
