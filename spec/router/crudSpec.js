@@ -3,13 +3,13 @@ var bodyParser = require("body-parser");
 
 var request = require("supertest");
 
-var createCrudRouter = require("../src/crudRouter");
+var createCrudRouter = require("../../src/router/crud");
 
-var proxyConfigHelper = require("./proxyConfigHelper");
+var proxyConfigBehaviour = require("../proxy/proxyConfigBehaviour");
 
 describe("crudRouter", function() {
 	describe("with invalid config", function() {
-		proxyConfigHelper({
+		proxyConfigBehaviour({
 			config: {},
 			factoryMethod: createCrudRouter,
 			msgPrefix: "config.proxy",

@@ -1,12 +1,9 @@
 var express = require("express");
 
-var checkProxy = require("./checkProxy");
-
-var routerUtils = require("./routerUtils");
-
-var objectify = routerUtils.objectify;
-var intify = routerUtils.intify;
-var createResponseHandler = routerUtils.createResponseHandler;
+var checkProxy = require("../utils/checkProxy");
+var objectify = require("../utils/objectify");
+var intify = require("../utils/intify");
+var createResponseHandler = require("../utils/responseHandler");
 
 module.exports = function createCRUDRouter(config) {
 	config = config || {};
