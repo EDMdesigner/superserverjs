@@ -1,14 +1,16 @@
 var express = require("express");
 
+
 module.exports = function createGalleryRouter(config) {
 	config = config || {};
 
 	var router = config.router || express.Router();
 
-	/*
+
 	var binaryProxy = config.binaryProxy;
 	var infoProxy = config.infoProxy;
-	
+
+	/*
 	router.get("/", function(req, res) {
 		var query = req.query || {};
 
@@ -20,11 +22,24 @@ module.exports = function createGalleryRouter(config) {
 
 		binaryProxy.read(query, createResponseHandler(res));
 	});
-
+*/
 	router.post("/", function(req, res) {
-		//createOne
+		console.log(req.file);
+		binaryProxy.createOne(req.file, function(err, binData) {
+			if (err) {
+				return res.send(err);
+			}
+			console.log(binData);
+			infoProxy.createOne(req.file, function(err, infData) {
+				if (err) {
+					return console.log(err);
+				}
+				res.send(infData);
+			});
+		});
 	});
 
+	/*
 	router.get("/:id", function(req, res) {
 		//readOneById
 	});
