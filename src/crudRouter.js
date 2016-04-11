@@ -1,66 +1,23 @@
 var express = require("express");
 
+var checkProxy = require("./checkProxy");
+
+var routerUtils = require("./routerUtils");
+
+var objectify = routerUtils.objectify;
+var intify = routerUtils.intify;
+var createResponseHandler = routerUtils.createResponseHandler;
+
 module.exports = function createCRUDRouter(config) {
 	config = config || {};
 
-	if (!config.proxy) {
-		throw new Error("config.proxy is mandatory");
-	}
+	checkProxy({
+		proxy: config.proxy,
+		msgPrefix: "config.proxy"
+	});
 
 	var proxy = config.proxy;
-
-	if (typeof proxy.read !== "function") {
-		throw new Error("config.proxy.read must be a function");
-	}
-
-	if (typeof proxy.createOne !== "function") {
-		throw new Error("config.proxy.createOne must be a function");
-	}
-
-	if (typeof proxy.readOneById !== "function") {
-		throw new Error("config.proxy.readOneById must be a function");
-	}
-
-	if (typeof proxy.updateOneById !== "function") {
-		throw new Error("config.proxy.updateOneById must be a function");
-	}
-
-	if (typeof proxy.destroyOneById !== "function") {
-		throw new Error("config.proxy.destroyOneById must be a function");
-	}
-
-
 	var router = config.router || express.Router();
-
-	function createResponseHandler(res) {
-		return function handleResponse(err, result) {
-			if (err) {
-				return res.json({err: err});
-			}
-
-			res.json(result);
-		};
-	}
-
-	function intify(value, defaultValue) {
-		value = parseInt(value, 10);
-		if (isNaN(value)) {
-			value = defaultValue;
-		}
-		return value;
-	}
-
-	function objectify(value) {
-		if (typeof value === "object") {
-			return value;
-		}
-
-		try {
-			return JSON.parse(value);
-		} catch (e) {
-			return {};
-		}
-	}
 
 	router.get("/", function(req, res) {
 		var query = {}; //TODO sophisticate this!

@@ -5,66 +5,15 @@ var request = require("supertest");
 
 var createCrudRouter = require("../src/crudRouter");
 
+var proxyConfigHelper = require("./proxyConfigHelper");
+
 describe("crudRouter", function() {
 	describe("with invalid config", function() {
-		it("missing proxy", function() {
-			expect(createCrudRouter).toThrowError("config.proxy is mandatory");
-		});
-
-		it("config.proxy.read", function() {
-			expect(function() {
-				createCrudRouter({
-					proxy: {
-						read: "yo"
-					}
-				});
-			}).toThrowError("config.proxy.read must be a function");
-		});
-
-		it("config.proxy.createOne", function() {
-			expect(function() {
-				createCrudRouter({
-					proxy: {
-						read: function() {}
-					}
-				});
-			}).toThrowError("config.proxy.createOne must be a function");
-		});
-
-		it("config.proxy.readOneById", function() {
-			expect(function() {
-				createCrudRouter({
-					proxy: {
-						read: function() {},
-						createOne: function() {}
-					}
-				});
-			}).toThrowError("config.proxy.readOneById must be a function");
-		});
-
-		it("config.proxy.updateOneById", function() {
-			expect(function() {
-				createCrudRouter({
-					proxy: {
-						read: function() {},
-						createOne: function() {},
-						readOneById: function() {}
-					}
-				});
-			}).toThrowError("config.proxy.updateOneById must be a function");
-		});
-
-		it("config.proxy.destroyOneById", function() {
-			expect(function() {
-				createCrudRouter({
-					proxy: {
-						read: function() {},
-						createOne: function() {},
-						readOneById: function() {},
-						updateOneById: function() {}
-					}
-				});
-			}).toThrowError("config.proxy.destroyOneById must be a function");
+		proxyConfigHelper({
+			config: {},
+			factoryMethod: createCrudRouter,
+			msgPrefix: "config.proxy",
+			prop: "proxy"
 		});
 	});
 

@@ -1,12 +1,28 @@
 var express = require("express");
+var checkProxy = require("./checkProxy");
+
+var routerUtils = require("./routerUtils");
+
+var objectify = routerUtils.objectify;
+var intify = routerUtils.intify;
+var createResponseHandler = routerUtils.createResponseHandler;
 
 module.exports = function createGalleryRouter(config) {
 	config = config || {};
 
 	var router = config.router || express.Router();
 
-	/*
-	var binaryProxy = config.binaryProxy;
+	checkProxy({
+		proxy: config.binaryProxy,
+		msgPrefix: "config.binaryProxy"
+	});
+
+	checkProxy({
+		proxy: config.infoProxy,
+		msgPrefix: "config.infoProxy"
+	});
+
+	//var binaryProxy = config.binaryProxy;
 	var infoProxy = config.infoProxy;
 	
 	router.get("/", function(req, res) {
@@ -18,9 +34,10 @@ module.exports = function createGalleryRouter(config) {
 		query.skip = intify(query.skip, 0);
 		query.limit = intify(query.limit, 10);
 
-		binaryProxy.read(query, createResponseHandler(res));
+		infoProxy.read(query, createResponseHandler(res));
 	});
 
+	/*
 	router.post("/", function(req, res) {
 		//createOne
 	});
@@ -36,37 +53,7 @@ module.exports = function createGalleryRouter(config) {
 	router.delete("/:id", function(req, res) {
 		//destroyOneById
 	});
-
-	function createResponseHandler(res) {
-		return function handleResponse(err, result) {
-			if (err) {
-				return res.json({err: err});
-			}
-
-			res.json(result);
-		};
-	}
-
-	function intify(value, defaultValue) {
-		value = parseInt(value, 10);
-		if (isNaN(value)) {
-			value = defaultValue;
-		}
-		return value;
-	}
-
-	function objectify(value) {
-		if (typeof value === "object") {
-			return value;
-		}
-
-		try {
-			return JSON.parse(value);
-		} catch (e) {
-			return {};
-		}
-	}
-	*/
+*/
 
 	return router;
 };
