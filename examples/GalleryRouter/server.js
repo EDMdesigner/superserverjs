@@ -1,6 +1,7 @@
 var express = require("express");
 var bodyParser = require("body-parser");
 var mongoose = require("mongoose");
+var cors = require("cors");
 var path = require("path");
 
 var superdataServer = require("../../src/superdata-server");
@@ -33,7 +34,6 @@ var gallerySchema = new mongoose.Schema({
 
 var galleryModel = mongoose.model("TestGalleryItems", gallerySchema);
 
-
 mongoose.connect(mongoUrl);
 
 var fileProxy = createFileProxy({
@@ -45,6 +45,8 @@ var mongoProxy = createMongoProxy({
 	model: galleryModel
 });
 
+app.use(cors());
+
 app.use(function(req, res, next) {
 	console.log("req.path", req.path);
 	next();
@@ -52,6 +54,7 @@ app.use(function(req, res, next) {
 
 app.use(bodyParser.json());
 
+app.options("*", cors());
 
 app.get("/", function(req, res) {
 	res.sendFile(path.join(__dirname + "/index.html"));

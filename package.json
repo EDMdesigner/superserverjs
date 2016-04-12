@@ -49,6 +49,7 @@
     "express": "4.13.4",
     "express-formidable": "^0.1.2",
     "file-type": "^3.8.0",
-    "mongoose": "4.4.12"
+    "mongoose": "4.4.12",
+    "cors": "2.7.1"
   }
 }
