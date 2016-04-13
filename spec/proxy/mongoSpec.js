@@ -24,6 +24,10 @@ describe("Mongo proxy", function() {
 					callback(null, []);
 				},
 
+				exec: function(callback) {
+					callback(null, []);
+				},
+
 				count: function(query, callback) {
 					callback(null, 0);
 				},

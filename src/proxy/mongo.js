@@ -31,13 +31,31 @@ module.exports = function createMongoProxy(config) {
 	}
 
 	function getItems(query, done) {
-		Model.find(query, function(err, result) {
+		var model = Model;
+
+		if (query.find) {
+			model = model.find(query.find);
+		}
+
+		if (query.sort) {
+			model = model.sort(query.sort);
+		}
+
+		if (typeof query.skip === "number") {
+			model = model.skip(query.skip);
+		}
+
+		if (typeof query.limit === "number") {
+			model = model.limit(query.limit);
+		}
+
+		model.exec(function(err, result) {
 			done(err, result);
 		});
 	}
 
 	function getItemCount(query, done) {
-		Model.count(query, function(err, result) {
+		Model.count(query.find, function(err, result) {
 			done(err, result);
 		});
 	}
