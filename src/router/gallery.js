@@ -48,7 +48,6 @@ module.exports = function createGalleryRouter(config) {
 
 	router.use(formidable.parse());
 
-	
 	router.get("/", function(req, res) {
 		var query = req.query || {};
 
@@ -82,12 +81,14 @@ module.exports = function createGalleryRouter(config) {
 	function upload(config) {
 		var res = config.res;
 		var data = config.data;
+		var file = config.file;
 
 		binaryProxy.createOne(data, function(err, response) {
 			if (err) {
 				return res.send(err);
 			}
 
+			response.file = file;
 			var info = createInfoObject(response);
 
 			infoProxy.createOne(info, createResponseHandler(res));
@@ -108,10 +109,12 @@ module.exports = function createGalleryRouter(config) {
 			});
 		} else {
 			console.log("file", req.body[fileUploadProp]);
+			var file = req.body[fileUploadProp];
 
-			fs.readFile(req.body[fileUploadProp].path, function (err, data) {
+			fs.readFile(file.path, function(err, data) {
 				upload({
 					res: res,
+					file: file,
 					data: data
 				});
 			});
