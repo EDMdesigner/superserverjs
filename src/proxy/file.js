@@ -1,5 +1,5 @@
 var fs = require("fs");
-var crypto = require("crypto");
+// var crypto = require("crypto");
 
 module.exports = function createFileProxy(config) {
 	config = config || {};
@@ -24,15 +24,15 @@ module.exports = function createFileProxy(config) {
 	}
 
 	var generateId = config.generateId || (function() {
-		var md5 = crypto.createHash("md5");
 		var nextNum = 0;
+
 		return function() {
 			var now = new Date();
-			md5.update(now.toString() + nextNum);
+			var hex = require("crypto").createHash("md5").update(now.toString() + nextNum).digest("hex");
 
 			nextNum += 1;
 
-			return md5.digest("hex");
+			return hex;
 		};
 	}());
 
