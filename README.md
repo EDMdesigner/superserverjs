@@ -32,6 +32,127 @@ app.use("/test", createCrudRouter({
 }));
 ```
 
+## galleryRouter
+
+This component creates CRUD routes for binary data. It uses two proxies, one for the binary data (binaryProxy) and one for the info derived from the binary data (infoProxy). The binaryProxy is tipically a fileProxy or an awsS3 proxy, while the infoProxy is tipically a mongoProxy. This way you can easily query based on the derived info. Listing, readOneById and updateOneById is directly calling the infoProxy, while createOne calls the binaryProxy to save the binary data. If saving the binary data succeeds, then it calls the createOne method of the infoProxy as well. Similarly, when you call the DELETE HTTP route, then first it removes the info from the infoProxy and if it succeeds, then it removes the data through the binaryProxy. If the latter does not succeed, then a background process should delete that stuck binary resource.
+
+### Params
+
+Param	| Type	| Required	| Default value	| Description
+---		| ---	| ---		| ---			| ---
+router | express.Router | No | express.Router() | The express router on which the CRUD routes of the gallery will be.
+createInfoObject | function | Yes | | This function will be called when the binary router returned without error. This is the mapping of the binary router's output to the info router's input.
+calculateBinaryId | function | Yes | | This function will be called when you delete a resoure. The output of the infoProxy will be the input of this function and it should calculate the id in the binary proxy.
+fileUploadProp | string | Yes | | The router will search this prop in the request's payload when you upload a file.
+fromUrlProp | string | Yes | The router will search the url on this prop. The resource from that url will be downloaded and then saved to the binary proxy.
+binaryProxy | superdata.proxy | Yes | | This is the proxy which is responsible to save the binary data somewhere. It can be a fileProxy or an s3 proxy, etc.
+infoProxy | superdata.proxy | Yes | | This proxy will save the info of the saved resource. Eg. original filename.
+
+
+
+### Example
+
+```javascript
+var express = require("express");
+var bodyParser = require("body-parser");
+var mongoose = require("mongoose");
+var cors = require("cors");
+var path = require("path");
+
+var superdataServer = require("../../src/superdata-server");
+var createGalleryRouter = superdataServer.router.gallery;
+var createCrudRouter = superdataServer.router.crud;
+var createFileProxy = superdataServer.proxy.file;
+var createMongoProxy = superdataServer.proxy.mongo;
+
+var app = express();
+var port = 7357;
+var mongoUrl = "mongodb://localhost:27017/testgallery";
+
+var gallerySchema = new mongoose.Schema({
+	title: {
+		type: String,
+		required: true
+	},
+	url: {
+		type: String,
+		required: true
+	},
+	createdAt: {
+		type: Date,
+		default: Date.now
+	},
+	thumbUrl: {
+		type: String
+	}
+});
+
+var galleryModel = mongoose.model("TestGalleryItems", gallerySchema);
+
+mongoose.connect(mongoUrl);
+
+var fileProxy = createFileProxy({
+	basePath: "./tmp",
+	idProperty: "id"
+});
+
+var mongoProxy = createMongoProxy({
+	model: galleryModel
+});
+
+app.use(cors());
+
+app.use(function(req, res, next) {
+	console.log("req.path", req.path);
+	next();
+});
+
+app.use(bodyParser.json());
+
+app.options("*", cors());
+
+app.get("/", function(req, res) {
+	res.sendFile(path.join(__dirname + "/index.html"));
+});
+
+app.get("/upload", function(req, res) {
+	res.sendFile(path.join(__dirname + "/upload.html"));
+});
+
+
+app.get("/from-url", function(req, res) {
+	res.sendFile(path.join(__dirname + "/fromUrl.html"));
+});
+
+app.use("/images", createCrudRouter({
+	proxy: fileProxy
+}));
+
+app.use("/gallery", createGalleryRouter({
+	createInfoObject: function(data) {
+		return {
+			title: data.file.name,
+			id: data.id,
+			url: "http://localhost:7357/images/" + data.id
+		};
+	},
+	binaryProxy: fileProxy,
+	infoProxy: mongoProxy,
+
+	fileUploadProp: "file",
+	fromUrlProp: "url"
+}));
+
+app.listen(port, function(err) {
+	if (err) {
+		return console.log(err);
+	}
+
+	console.log("Gallery server listening on port: ", port);
+});
+```
+
+
 ## fileProxy
 
 The file proxy is responsible for handling files in a directory. As other proxies, it also follows the CRUD logic.
