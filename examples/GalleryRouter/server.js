@@ -15,7 +15,7 @@ var port = 7357;
 var mongoUrl = "mongodb://localhost:27017/testgallery";
 
 var gallerySchema = new mongoose.Schema({
-	name: {
+	title: {
 		type: String,
 		required: true
 	},
@@ -23,7 +23,7 @@ var gallerySchema = new mongoose.Schema({
 		type: String,
 		required: true
 	},
-	date: {
+	createdAt: {
 		type: Date,
 		default: Date.now
 	},
@@ -76,7 +76,8 @@ app.use("/images", createCrudRouter({
 app.use("/gallery", createGalleryRouter({
 	createInfoObject: function(data) {
 		return {
-			name: data.id,
+			title: data.file.name,
+			id: data.id,
 			url: "http://localhost:7357/images/" + data.id
 		};
 	},

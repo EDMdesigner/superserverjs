@@ -53,7 +53,6 @@ module.exports = function createGalleryRouter(config) {
 
 	router.use(formidable.parse());
 
-	
 	router.get("/", function(req, res) {
 		var query = req.query || {};
 

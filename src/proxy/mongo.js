@@ -61,8 +61,8 @@ module.exports = function createMongoProxy(config) {
 	}
 
 	function createOne(data, callback) {
-		Model.create(data, function(err) {
-			callback(err);
+		Model.create(data, function(err, result) {
+			callback(err, result);
 		});
 	}
 
@@ -77,14 +77,14 @@ module.exports = function createMongoProxy(config) {
 	}
 
 	function updateOneById(id, newData, callback) {
-		Model.findByIdAndUpdate(id, newData, function(err) {
-			callback(err);
+		Model.findByIdAndUpdate(id, newData, function(err, result) {
+			callback(err, result);
 		});
 	}
 
 	function destroyOneById(id, callback) {
-		Model.findByIdAndRemove(id, function(err) {
-			callback(err);
+		Model.findByIdAndRemove(id, function(err, result) {
+			callback(err, result);
 		});
 	}
 
