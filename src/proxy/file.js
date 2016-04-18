@@ -28,6 +28,7 @@ module.exports = function createFileProxy(config) {
 		var nextNum = 0;
 		return function() {
 			var now = new Date();
+			console.log(now);
 			md5.update(now.toString() + nextNum);
 
 			nextNum += 1;

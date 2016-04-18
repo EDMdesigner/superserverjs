@@ -19,6 +19,10 @@ module.exports = function createGalleryRouter(config) {
 		throw new Error("config.createInfoObject must be a function");
 	}
 
+	if (typeof config.calculateBinaryId !== "function") {
+		throw new Error("config.calculateBinaryId must be a function");
+	}
+
 	if (!config.fileUploadProp) {
 		throw new Error("config.fileUploadProp is mandatory");
 	}
@@ -41,6 +45,7 @@ module.exports = function createGalleryRouter(config) {
 	var infoProxy = config.infoProxy;
 
 	var createInfoObject = config.createInfoObject;
+	var calculateBinaryId = config.calculateBinaryId;
 
 	var fileUploadProp = config.fileUploadProp;
 	var fromUrlProp = config.fromUrlProp;
@@ -96,9 +101,6 @@ module.exports = function createGalleryRouter(config) {
 
 	router.post("/", function(req, res) {
 		var contentType = req.get("Content-Type");
-		console.log("content-type", contentType);
-
-		console.log("req.body", req.body);
 
 		if (contentType.toLowerCase().indexOf("application/json") > -1) {
 			download({
@@ -107,8 +109,6 @@ module.exports = function createGalleryRouter(config) {
 				url: req.body[fromUrlProp]
 			});
 		} else {
-			console.log("file", req.body[fileUploadProp]);
-
 			fs.readFile(req.body[fileUploadProp].path, function (err, data) {
 				upload({
 					res: res,
@@ -131,12 +131,16 @@ module.exports = function createGalleryRouter(config) {
 
 	router.delete("/:id", function(req, res) {
 		var id = req.params.id;
-		infoProxy.destroyOneById(id, function(err) {
+		infoProxy.destroyOneById(id, function(err, result) {
 			if (err) {
 				return res.send(err);
 			}
 
-			binaryProxy.destroyOneById(id, function() {});
+			var binId = calculateBinaryId(result);
+
+			binaryProxy.destroyOneById(binId, function() {
+				res.send(result);
+			});
 		});
 	});
 
