@@ -137,6 +137,8 @@ module.exports = function createGalleryRouter(config) {
 
 			var binId = calculateBinaryId(result);
 
+			console.log("www", binId);
+
 			binaryProxy.destroyOneById(binId, function() {
 				res.send(result);
 			});

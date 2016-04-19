@@ -8,7 +8,12 @@ module.exports = function createResponseHandler(res) {
 
 
 		if (Buffer.isBuffer(result)) {
-			res.set("Content-Type", fileType(result).mime);
+			var fType = fileType(result);
+
+			if (fType) {
+				res.set("Content-Type", fType.mime);
+			}
+			
 			return res.send(result);
 		}
 

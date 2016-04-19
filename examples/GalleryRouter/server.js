@@ -76,10 +76,13 @@ app.use("/images", createCrudRouter({
 app.use("/gallery", createGalleryRouter({
 	createInfoObject: function(data) {
 		return {
-			title: data.file.name,
+			title: data.id,
 			id: data.id,
 			url: "http://localhost:7357/images/" + data.id
 		};
+	},
+	calculateBinaryId: function(data) {
+		return data.id;
 	},
 	binaryProxy: fileProxy,
 	infoProxy: mongoProxy,
