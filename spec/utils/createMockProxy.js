@@ -4,7 +4,9 @@ module.exports = function createMockProxy() {
 			callback();
 		},
 		createOne: function(data, callback) {
-			callback();
+			callback(null, {
+				file: {}
+			});
 		},
 		readOneById: function(id, callback) {
 			callback();

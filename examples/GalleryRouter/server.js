@@ -76,8 +76,9 @@ app.use("/images", createCrudRouter({
 app.use("/gallery", createGalleryRouter({
 	createInfoObject: function(data) {
 		return {
-			title: data.id,
+			title: data.file.name,
 			id: data.id,
+			createdAt: data.createdAt,
 			url: "http://localhost:7357/images/" + data.id
 		};
 	},
