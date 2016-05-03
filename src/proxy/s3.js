@@ -1,88 +1,119 @@
-// var fs = require("fs");
-// var crypto = require("crypto");
+/* 
+ * AWS S3 proxy 
+ */
+
+var crypto = require("crypto");
 var AWS = require("aws-sdk");
 
-AWS.config.update({
-	accessKeyId: "",
-	secretAccessKey: "",
-	region: "us-east-1"
-});
-
-module.exports = function createFileProxy(config) {
+module.exports = function createS3Proxy(config) {
 	config = config || {};
 
-	if (!config.idProperty) {
-		throw new Error("config.idProperty is mandatory");
+	if (!config.accessKeyId) {
+		throw new Error("config.accessKeyId is mandatory!");
 	}
 
-	// var idProperty = config.idProperty;
-	// var basePath = config.basePath;
-	// var encoding = config.encoding;
+	if (!config.secretAccessKey) {
+		throw new Error("config.secretAccessKey is mandatory!");
+	}
 
-	// var generateId = config.generateId || (function() {
-	// 	var md5 = crypto.createHash("md5");
-	// 	var nextNum = 0;
+	if (!config.bucket) {
+		throw new Error("config.bucket is mandatory!");
+	}
 
-	// 	return function() {
-	// 		var now = new Date();
+	var s3 = new AWS.S3({
+		accessKeyId: config.accessKeyId,
+		secretAccessKey: config.secretAccessKey,
+		region: config.region,
+		params: {
+			Bucket: config.bucket
+		}
+	});
 
-	// 		md5.update(now.toString() + nextNum);
+	var generateId = config.generateId || (function() {
+		var nextNum = 0;
 
-	// 		nextNum += 1;
+		return function() {
+			var now = new Date();
+			var hex = crypto.createHash("md5").update(now.toString() + nextNum).digest("hex");
 
-	// 		return md5.digest("hex");
-	// 	};
-	// }());
+			nextNum += 1;
 
+			return hex;
+		};
+	}());
 
+	function read(query, callback) {
+		s3.listObjects(function(err, data) {
+			if (err) {
+				return callback(err);
+			}
 
-	// function read(query, callback) {
+			callback(null, {
+				items: data.Contents,
+				count: data.Contents.length
+			});
+		});
+	}
 
-	// }
+	function createOne(data, callback) {
+		var params = {
+			Key: generateId(),
+			Body: data
+		};
 
-	// function createOne(data, callback) {
+		s3.upload(params, function(err, data) {
+			if (err) {
+				return callback(err);
+			}
 
-	// 	var s3bucket = new AWS.S3({
-	// 		params: {
-	// 			Bucket: "edm-testbucket"
-	// 		}
-	// 	});
+			callback(null, data);
+		});
+	}
 
-	// 	s3bucket.createBucket(function() {
-	// 		var params = {
-	// 			Key: generateId(),
-	// 			Body: data
-	// 		};
+	function readOneById(id, callback) {
+		var params = {
+			Key: id
+		};
 
-	// 		s3bucket.upload(params, function(err, data) {
-	// 			if (err) {
-	// 				callback(err);
-	// 			} else {
-	// 				// console.log(data);
+		s3.getObject(params, function(err, data) {
+			if (err) {
+				return callback(err);
+			}
 
-	// 				callback(null, data);
-	// 			}
-	// 		});
-	// 	});
-	// }
+			callback(null, data);
+		});
+	}
 
-	// function readOneById(id, callback) {
+	function updateOneById(id, newData, callback) {
+		var params = {
+			Key: id,
+			Body: newData
+		};
 
-	// }
+		s3.upload(params, function(err, data) {
+			if (err) {
+				return callback(err);
+			}
 
-	// function updateOneById(id, newData, callback) {
+			callback(null, data);
+		});
+	}
 
-	// }
+	function destroyOneById(id, callback) {
+		var params = {
+			Key: id
+		};
 
-	// function destroyOneById(id, callback) {
+		s3.deleteObject(params, function(err, data) {
+			return callback(err, data);
+		});
+	}
 
-	// }
-
-	// return {
-	// 	read: read,
-	// 	createOne: createOne,
-	// 	readOneById: readOneById,
-	// 	updateOneById: updateOneById,
-	// 	destroyOneById: destroyOneById
-	// };
+	return {
+		read: read,
+		createOne: createOne,
+		readOneById: readOneById,
+		updateOneById: updateOneById,
+		destroyOneById: destroyOneById
+	};
 };
