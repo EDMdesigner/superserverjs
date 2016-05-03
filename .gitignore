@@ -45,3 +45,6 @@ jspm_packages
 *.sublime-project
 
 **/*.build.js
+
+# Example GalleryRouter logs
+examples/GalleryRouter/tmp
