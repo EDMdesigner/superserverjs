@@ -1,5 +1,5 @@
 var fs = require("fs");
-var crypto = require("crypto");
+var idGenerator = require("../utils/generateId");
 
 module.exports = function createFileProxy(config) {
 	config = config || {};
@@ -23,18 +23,7 @@ module.exports = function createFileProxy(config) {
 		basePath += "/";
 	}
 
-	var generateId = config.generateId || (function() {
-		var nextNum = 0;
-
-		return function() {
-			var now = new Date();
-			var hex = crypto.createHash("md5").update(now.toString() + nextNum).digest("hex");
-
-			nextNum += 1;
-
-			return hex;
-		};
-	}());
+	var generateId = config.generateId || idGenerator();
 
 	function read(query, callback) {
 		fs.readdir(basePath, function(err, data) {
