@@ -83,7 +83,11 @@ app.use("/gallery", createGalleryRouter({
 		};
 	},
 	calculateBinaryId: function(data) {
-		return data.id;
+		var url = data.url;
+		var binaryId = url.split("/");
+
+		binaryId = binaryId[binaryId.length - 1];
+		return binaryId;
 	},
 	binaryProxy: fileProxy,
 	infoProxy: mongoProxy,
