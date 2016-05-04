@@ -63,7 +63,8 @@ module.exports = function(dependencies) {
 		function createOne(data, callback) {
 			var params = {
 				Key: generateId(),
-				Body: data
+				Body: data,
+				ACL: "public-read"
 			};
 
 			s3.upload(params, function(err, data) {
@@ -92,7 +93,8 @@ module.exports = function(dependencies) {
 		function updateOneById(id, newData, callback) {
 			var params = {
 				Key: id,
-				Body: newData
+				Body: newData,
+				ACL: "public-read"
 			};
 
 			s3.upload(params, function(err, data) {
