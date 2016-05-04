@@ -44,7 +44,7 @@ router | express.Router | No | express.Router() | The express router on which th
 createInfoObject | function | Yes | | This function will be called when the binary router returned without error. This is the mapping of the binary router's output to the info router's input.
 calculateBinaryId | function | Yes | | This function will be called when you delete a resoure. The output of the infoProxy will be the input of this function and it should calculate the id in the binary proxy.
 fileUploadProp | string | Yes | | The router will search this prop in the request's payload when you upload a file.
-fromUrlProp | string | Yes | The router will search the url on this prop. The resource from that url will be downloaded and then saved to the binary proxy.
+fromUrlProp | string | Yes | | The router will search the url on this prop. The resource from that url will be downloaded and then saved to the binary proxy.
 binaryProxy | superdata.proxy | Yes | | This is the proxy which is responsible to save the binary data somewhere. It can be a fileProxy or an s3 proxy, etc.
 infoProxy | superdata.proxy | Yes | | This proxy will save the info of the saved resource. Eg. original filename.
 
@@ -170,7 +170,8 @@ encoding | string | No | | The encoding of the files to handle. (eg.: "utf8")
 
 ```javascript
 var createFileProxy = require("superdata-server").proxy.file;
-proxy = createFileProxy({
+
+var proxy = createFileProxy({
 	basePath: "testFolder",
 	idProperty: "myVeryId",
 	encoding: "utf8"
@@ -199,5 +200,31 @@ var model = mongoose.model("...", schema);
 
 var proxy = createMongoProxy({
 	model: model
+});
+```
+
+## s3Proxy
+
+s3Proxy is responsible for handling data stored in [AWS S3](https://aws.amazon.com/s3/). As other proxies, it also follows the CRUD logic.
+
+### Params
+
+Param	| Type	| Required	| Default value	| Description
+---		| ---	| ---		| ---			| ---
+accessKeyId | string | Yes | | your S3 access key
+secretAccessKey | string | Yes | | your S3 secret access key
+region | string | Yes | | AWS region name that your bucket belongs to
+bucket | string | Yes | | name of your S3 bucket
+
+### Example
+
+```javascript
+var createS3Proxy = require("superdata-server").proxy.s3;
+
+var proxy = createS3Proxy({
+	accessKeyId: "your S3 access key",
+	secretAccessKey: "your S3 secret access key",
+	region: "AWS region name that your bucket belongs to",
+	bucket: "name of your bucket"
 });
 ```
