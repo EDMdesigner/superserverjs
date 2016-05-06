@@ -1,17 +1,18 @@
 {
-  "name": "superdata-server",
+  "name": "superserverjs",
   "version": "0.0.1",
   "description": "Superdata motivated server side modules. (Proxies & routers.)",
-  "main": "src/superdata-server.js",
+  "main": "src/main.js",
   "scripts": {
     "test": "gulp test"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/EDMdesigner/superdata-server.git"
+    "url": "git+https://github.com/EDMdesigner/superserverjs.git"
   },
   "keywords": [
-    "superdata",
+    "superserver",
+    "superserverjs",
     "server",
     "router",
     "REST",
@@ -25,9 +26,9 @@
   "author": "EDMdesigner",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/EDMdesigner/superdata-server/issues"
+    "url": "https://github.com/EDMdesigner/superserverjs/issues"
   },
-  "homepage": "https://github.com/EDMdesigner/superdata-server#readme",
+  "homepage": "https://github.com/EDMdesigner/superserverjs#readme",
   "devDependencies": {
     "body-parser": "^1.15.0",
     "express-formidable": "^0.1.2",
