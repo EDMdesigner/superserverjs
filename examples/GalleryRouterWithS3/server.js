@@ -4,7 +4,7 @@ var mongoose = require("mongoose");
 var cors = require("cors");
 var path = require("path");
 
-var superdataServer = require("../../src/superdata-server");
+var superdataServer = require("../../src/main");
 var createGalleryRouter = superdataServer.router.gallery;
 var createCrudRouter = superdataServer.router.crud;
 var createS3Proxy = superdataServer.proxy.s3;
