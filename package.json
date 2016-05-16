@@ -55,6 +55,7 @@
     "cors": "2.7.1",
     "express": "4.13.4",
     "express-formidable": "^0.1.2",
+    "extend": "^3.0.0",
     "file-type": "^3.8.0",
     "mongoose": "4.4.12"
   }
