@@ -1,6 +1,6 @@
 {
   "name": "superserverjs",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Superdata motivated server side modules. (Proxies & routers.)",
   "main": "src/main.js",
   "scripts": {
@@ -18,10 +18,13 @@
     "REST",
     "CRUD",
     "proxy",
+    "mongo",
     "mongodb",
     "file",
+    "AWS",
     "s3",
-    "express"
+    "express",
+    "expressjs"
   ],
   "author": "EDMdesigner",
   "license": "MIT",
@@ -49,10 +52,10 @@
     "async": "^2.0.0-rc.2",
     "aws-sdk": "2.3.7",
     "body-parser": "^1.15.0",
+    "cors": "2.7.1",
     "express": "4.13.4",
     "express-formidable": "^0.1.2",
     "file-type": "^3.8.0",
-    "mongoose": "4.4.12",
-    "cors": "2.7.1"
+    "mongoose": "4.4.12"
   }
 }

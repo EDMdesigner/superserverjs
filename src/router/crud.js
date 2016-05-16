@@ -1,6 +1,8 @@
 var express = require("express");
 
 var checkProxy = require("../utils/checkProxy");
+var checkBelongsTo = require("../utils/checkBelongsTo");
+
 var objectify = require("../utils/objectify");
 var intify = require("../utils/intify");
 var createResponseHandler = require("../utils/responseHandler");
@@ -13,11 +15,13 @@ module.exports = function createCRUDRouter(config) {
 		msgPrefix: "config.proxy"
 	});
 
+	checkBelongsTo(config.belongsTo);
+
 	var proxy = config.proxy;
-	var router = config.router || express.Router();
+	var router = config.router || express.Router({mergeParams: true});
 
 	router.get("/", function(req, res) {
-		var query = {}; //TODO sophisticate this!
+		var query = {};
 
 		if (req.query) {
 			query = req.query;

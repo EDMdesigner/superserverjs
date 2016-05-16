@@ -3,6 +3,7 @@
  */
 
 var async = require("async");
+var extend = require("extend");
 
 module.exports = function createMongoProxy(config) {
 
@@ -15,6 +16,12 @@ module.exports = function createMongoProxy(config) {
 	var Model = config.model;
 
 	function read(query, callback) {
+		if (!query.find) {
+			query.find = {};
+		}
+		
+		extend(query.find, obj.filter);
+
 		async.parallel({
 			items: getItems.bind(null, query),
 			count: getItemCount.bind(null, query)
@@ -67,32 +74,50 @@ module.exports = function createMongoProxy(config) {
 	}
 
 	function readOneById(id, callback) {
-		Model.findById(id, function(err, result) {
-			if (err) {
-				return callback(err);
-			}
+		var find = {
+			_id: id
+		};
 
-			callback(null, result);
+		extend(find, obj.filter);
+
+		Model.findOne(find, function(err, result) {
+			callback(err, result);
 		});
 	}
 
 	function updateOneById(id, newData, callback) {
-		Model.findByIdAndUpdate(id, newData, function(err, result) {
+		var find = {
+			_id: id
+		};
+
+		extend(find, obj.filter);
+
+		Model.findOneAndUpdate(find, newData, function(err, result) {
 			callback(err, result);
 		});
 	}
 
 	function destroyOneById(id, callback) {
-		Model.findByIdAndRemove(id, function(err, result) {
+		var find = {
+			_id: id
+		};
+
+		extend(find, obj.filter);
+
+		Model.findOneAndRemove(find, function(err, result) {
 			callback(err, result);
 		});
 	}
 
-	return {
+	var obj = {
+		filter: {},
+
 		read: read,
 		createOne: createOne,
 		readOneById: readOneById,
 		updateOneById: updateOneById,
 		destroyOneById: destroyOneById
 	};
+
+	return obj;
 };

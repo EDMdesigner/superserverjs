@@ -21,7 +21,7 @@ describe("Mongo proxy", function() {
 		beforeAll(function(done) {
 			var mockModel = {
 				find: function(query, callback) {
-					callback(null, []);
+					return mockModel;
 				},
 
 				exec: function(callback) {
@@ -36,15 +36,15 @@ describe("Mongo proxy", function() {
 					callback(null);
 				},
 
-				findById: function(id, callback) {
+				findOne: function(id, callback) {
 					callback(null, {});
 				},
 
-				findByIdAndUpdate: function(id, data, callback) {
+				findOneAndUpdate: function(id, data, callback) {
 					callback(null);
 				},
 
-				findByIdAndRemove: function(id, callback) {
+				findOneAndRemove: function(id, callback) {
 					callback(null);
 				}
 			};
