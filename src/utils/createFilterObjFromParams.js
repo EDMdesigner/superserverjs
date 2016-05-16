@@ -3,7 +3,7 @@ module.exports = function createFilterObjFromParams(config) {
 		return {};
 	}
 
-	if (!config.params instanceof Array) {
+	if (!(config.params instanceof Array)) {
 		return {};
 	}
 

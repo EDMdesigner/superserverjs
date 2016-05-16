@@ -57,7 +57,7 @@ gulp.task("jasmine", function() {
 		"spec/**/*.js"
 	])
 	.pipe(jasmine({
-		verbose: true
+		verbose: false
 	}));
 });
 

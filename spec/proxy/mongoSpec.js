@@ -20,7 +20,7 @@ describe("Mongo proxy", function() {
 
 		beforeAll(function(done) {
 			var mockModel = {
-				find: function(query, callback) {
+				find: function() {
 					return mockModel;
 				},
 
