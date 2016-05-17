@@ -138,8 +138,6 @@ module.exports = function createGalleryRouter(config) {
 
 			extend(info, filterObj);
 
-			console.log("info: ", info, filterObj, config);
-
 			infoProxy.createOne(info, createResponseHandler(res));
 		});
 	}
