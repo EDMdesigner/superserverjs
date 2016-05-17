@@ -5,12 +5,22 @@ var mockAWS = {
 	S3: function() {}
 };
 
+
 describe("AWS S3 proxy", function() {
+
 	var fakeMethod = function(params, cb) {
 		cb(null, {});
 	};
 
-	var  s3Proto = {
+	var fakeFileTypeObj = {
+		fakeFileType: function() {
+			return {
+				mime: "mime"
+			};
+		}
+	};
+
+	var s3Proto = {
 		listObjects: fakeMethod,
 		upload: fakeMethod,
 		getObject: fakeMethod,
@@ -23,13 +33,15 @@ describe("AWS S3 proxy", function() {
 		spyOn(s3Proto, "listObjects");
 		spyOn(s3Proto, "upload");
 		spyOn(s3Proto, "getObject");
-		spyOn(s3Proto, "deleteObject");	
-		
+		spyOn(s3Proto, "deleteObject");
+		spyOn(fakeFileTypeObj, "fakeFileType").and.callThrough();
+
 		mockAWS.S3.prototype = s3Proto;
 
 		createS3Proxy = s3Core({
 			generateId: generateId,
-			AWS: mockAWS
+			AWS: mockAWS,
+			fileType: fakeFileTypeObj.fakeFileType
 		});
 	});
 
@@ -89,7 +101,7 @@ describe("AWS S3 proxy", function() {
 
 	describe("with valid config", function() {
 		var proxy;
-		
+
 		beforeAll(function() {
 			proxy = createS3Proxy({
 				accessKeyId: "test",
@@ -130,6 +142,9 @@ describe("AWS S3 proxy", function() {
 			it("createOne", function() {
 				proxy.createOne();
 				expect(s3Proto.upload).toHaveBeenCalled();
+				// expect(s3Proto.upload.argsForCall);
+				// console.log(s3Proto.upload.argsForCall);
+				expect(fakeFileTypeObj.fakeFileType).toHaveBeenCalled();
 			});
 
 			it("readOneById", function() {

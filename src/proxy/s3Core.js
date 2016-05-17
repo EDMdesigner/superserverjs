@@ -11,6 +11,10 @@ module.exports = function(dependencies) {
 		throw new Error("generateId dependency is mandatory!");
 	}
 	
+	if (!dependencies.fileType) {
+		throw new Error("fileType module dependency is mandatory!");
+	}
+	
 	return function createS3Proxy(config) {
 		config = config || {};
 
@@ -34,10 +38,9 @@ module.exports = function(dependencies) {
 			throw new Error("config.generateId must be a function!");
 		}
 
+		var fileType = dependencies.fileType;
 		var generateId = config.generateId || dependencies.generateId();
-		
 		var AWS = dependencies.AWS;
-
 		var s3 = new AWS.S3({
 			accessKeyId: config.accessKeyId,
 			secretAccessKey: config.secretAccessKey,
@@ -64,7 +67,8 @@ module.exports = function(dependencies) {
 			var params = {
 				Key: generateId(),
 				Body: data,
-				ACL: "public-read"
+				ACL: "public-read",
+				ContentType: fileType(data).mime
 			};
 
 			s3.upload(params, function(err, data) {
