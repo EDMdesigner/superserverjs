@@ -12,14 +12,6 @@ describe("AWS S3 proxy", function() {
 		cb(null, {});
 	};
 
-	var fakeFileTypeObj = {
-		fakeFileType: function() {
-			return {
-				mime: "mime"
-			};
-		}
-	};
-
 	var s3Proto = {
 		listObjects: fakeMethod,
 		upload: fakeMethod,
@@ -34,14 +26,17 @@ describe("AWS S3 proxy", function() {
 		spyOn(s3Proto, "upload");
 		spyOn(s3Proto, "getObject");
 		spyOn(s3Proto, "deleteObject");
-		spyOn(fakeFileTypeObj, "fakeFileType").and.callThrough();
 
 		mockAWS.S3.prototype = s3Proto;
 
 		createS3Proxy = s3Core({
 			generateId: generateId,
 			AWS: mockAWS,
-			fileType: fakeFileTypeObj.fakeFileType
+			fileType: function() {
+				return {
+					mime: "mime"
+				};
+			}
 		});
 	});
 
@@ -142,9 +137,7 @@ describe("AWS S3 proxy", function() {
 			it("createOne", function() {
 				proxy.createOne();
 				expect(s3Proto.upload).toHaveBeenCalled();
-				// expect(s3Proto.upload.argsForCall);
-				// console.log(s3Proto.upload.argsForCall);
-				expect(fakeFileTypeObj.fakeFileType).toHaveBeenCalled();
+				expect(s3Proto.upload.calls.argsFor(0)[0].ContentType).toBe("mime");
 			});
 
 			it("readOneById", function() {
