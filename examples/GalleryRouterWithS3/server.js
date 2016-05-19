@@ -94,6 +94,8 @@ app.use("/gallery", createGalleryRouter({
 	binaryProxy: s3Proxy,
 	infoProxy: mongoProxy,
 
+	validMimeTypes: ["image/jpeg", "image/png", "image/gif"],
+
 	fileUploadProp: "file",
 	fromUrlProp: "url"
 }));

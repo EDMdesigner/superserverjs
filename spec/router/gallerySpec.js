@@ -23,7 +23,7 @@ describe("Gallery router", function() {
 			});
 		});
 
-		it("config.fileUploadProp", function() {
+		it("config.fileUploadProp", function() {	
 			expect(function() {
 				createGalleryRouter({
 					createInfoObject: function() {},
@@ -121,6 +121,8 @@ describe("Gallery router", function() {
 				createInfoObject: createInfoObject,
 				calculateBinaryId: calculateBinaryId,
 
+				validMimeTypes: ["image/jpeg", "image/gif"],
+
 				fileUploadProp: "file",
 				fromUrlProp: "url"
 			});
@@ -195,6 +197,32 @@ describe("Gallery router", function() {
 
 					expect(mockBinaryProxy.read).not.toHaveBeenCalled();
 					expect(mockBinaryProxy.createOne).toHaveBeenCalled();
+					expect(mockBinaryProxy.readOneById).not.toHaveBeenCalled();
+					expect(mockBinaryProxy.updateOneById).not.toHaveBeenCalled();
+					expect(mockBinaryProxy.destroyOneById).not.toHaveBeenCalled();
+
+					done();
+				});
+		});
+
+		it("POST / - FormData invalid undefined type", function(done) {
+			request(app)
+				.post("/")
+				.attach("file", path.join(__dirname, "/wrongMime.json"))
+				.set("Accept", "application/json")
+				.expect(200)
+				.end(function(err, res) {
+					expect(err).toBeNull();
+					expect(res).toBeDefined();
+
+					expect(mockInfoProxy.read).not.toHaveBeenCalled();
+					expect(mockInfoProxy.createOne).not.toHaveBeenCalled();
+					expect(mockInfoProxy.readOneById).not.toHaveBeenCalled();
+					expect(mockInfoProxy.updateOneById).not.toHaveBeenCalled();
+					expect(mockInfoProxy.destroyOneById).not.toHaveBeenCalled();
+
+					expect(mockBinaryProxy.read).not.toHaveBeenCalled();
+					expect(mockBinaryProxy.createOne).not.toHaveBeenCalled();
 					expect(mockBinaryProxy.readOneById).not.toHaveBeenCalled();
 					expect(mockBinaryProxy.updateOneById).not.toHaveBeenCalled();
 					expect(mockBinaryProxy.destroyOneById).not.toHaveBeenCalled();

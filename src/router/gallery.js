@@ -3,6 +3,7 @@ var express = require("express");
 var formidable = require("express-formidable");
 var request = require("superagent");
 var extend = require("extend");
+var fileType = require("file-type");
 
 var checkProxy = require("../utils/checkProxy");
 var checkBelongsTo = require("../utils/checkBelongsTo");
@@ -26,6 +27,10 @@ module.exports = function createGalleryRouter(config) {
 		throw new Error("config.calculateBinaryId must be a function");
 	}
 
+	if (config.validMimeTypes && !(typeof config.validMimeTypes === "string" || config.validMimeTypes.constructor === Array)) {
+		throw new Error("config.validMimeTypes must be a string, or array");
+	}
+
 	if (!config.fileUploadProp) {
 		throw new Error("config.fileUploadProp is mandatory");
 	}
@@ -45,6 +50,12 @@ module.exports = function createGalleryRouter(config) {
 		proxy: config.infoProxy,
 		msgPrefix: "config.infoProxy"
 	});
+
+	var validMimeTypes = config.validMimeTypes;
+
+	if (validMimeTypes && typeof validMimeTypes === "string") {
+		validMimeTypes = [validMimeTypes];
+	}
 
 	var binaryProxy = config.binaryProxy;
 	var infoProxy = config.infoProxy;
@@ -122,6 +133,24 @@ module.exports = function createGalleryRouter(config) {
 		var req = conf.req;
 		var res = conf.res;
 		var data = conf.data;
+
+		if (validMimeTypes) {
+			var ft = fileType(data.buffer);
+
+			if (!ft || !ft.mime) {
+				console.log("Gallery router: undefined mime type");
+				return res.send({
+					error: "Gallery router: undefined mime type"
+				});
+			}
+
+			if (validMimeTypes.indexOf(ft.mime) === -1) {
+				console.log("Gallery router: Invalid mime type");
+				return res.send({
+					error: "Gallery router: Invalid mime type"
+				});
+			}
+		}
 
 		binaryProxy.createOne(data.buffer, function(err, response) {
 			if (err) {
