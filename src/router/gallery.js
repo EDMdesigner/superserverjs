@@ -140,14 +140,14 @@ module.exports = function createGalleryRouter(config) {
 			if (!ft || !ft.mime) {
 				console.log("Gallery router: undefined mime type");
 				return res.send({
-					error: "Gallery router: undefined mime type"
+					err: "Gallery router: undefined mime type"
 				});
 			}
 
 			if (validMimeTypes.indexOf(ft.mime) === -1) {
 				console.log("Gallery router: Invalid mime type");
 				return res.send({
-					error: "Gallery router: Invalid mime type"
+					err: "Gallery router: Invalid mime type"
 				});
 			}
 		}
