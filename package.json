@@ -1,6 +1,6 @@
 {
   "name": "superserverjs",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "Superdata motivated server side modules. (Proxies & routers.)",
   "main": "src/main.js",
   "scripts": {
