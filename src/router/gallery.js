@@ -71,7 +71,7 @@ module.exports = function createGalleryRouter(config) {
 	router.use(formidable.parse());
 
 	router.get("/", function(req, res) {
-		infoProxy.filter = createFilterObjFromParams({
+		var filter = createFilterObjFromParams({
 			belongsTo: config.belongsTo,
 			params: req.params
 		});
@@ -99,7 +99,7 @@ module.exports = function createGalleryRouter(config) {
 		query.skip = intify(query.skip, 0);
 		query.limit = intify(query.limit, 10);
 
-		infoProxy.read(query, createResponseHandler(res));
+		infoProxy.read(query, filter, createResponseHandler(res));
 	});
 
 	function download(config) {
@@ -154,7 +154,12 @@ module.exports = function createGalleryRouter(config) {
 			}
 		}
 
-		binaryProxy.createOne(data.buffer, function(err, response) {
+		var filterObj = createFilterObjFromParams({
+			belongsTo: config.belongsTo,
+			params: req.params
+		});
+
+		binaryProxy.createOne(data.buffer, filterObj, function(err, response) {
 			if (err) {
 				return res.send(err);
 			}
@@ -162,14 +167,14 @@ module.exports = function createGalleryRouter(config) {
 			response.file = data.file;
 			var info = createInfoObject(response);
 
-			var filterObj = createFilterObjFromParams({
-				belongsTo: config.belongsTo,
-				params: req.params
-			});
+			// var filterObj = createFilterObjFromParams({
+			// 	belongsTo: config.belongsTo,
+			// 	params: req.params
+			// });
 
-			extend(info, filterObj);
+			// extend(info, filterObj);
 
-			infoProxy.createOne(info, createResponseHandler(res));
+			infoProxy.createOne(info, filterObj, createResponseHandler(res));
 		});
 	}
 
@@ -225,17 +230,17 @@ module.exports = function createGalleryRouter(config) {
 	});
 
 	router.get("/:id", function(req, res) {
-		infoProxy.filter = createFilterObjFromParams({
+		var filter = createFilterObjFromParams({
 			belongsTo: config.belongsTo,
 			params: req.params
 		});
 
 		var id = req.params.id;
-		infoProxy.readOneById(id, createResponseHandler(res));
+		infoProxy.readOneById(id, filter, createResponseHandler(res));
 	});
 
 	router.put("/:id", function(req, res) {
-		infoProxy.filter = createFilterObjFromParams({
+		var filter = createFilterObjFromParams({
 			belongsTo: config.belongsTo,
 			params: req.params
 		});
@@ -243,24 +248,24 @@ module.exports = function createGalleryRouter(config) {
 		var id = req.params.id;
 		var data = req.body;
 
-		infoProxy.updateOneById(id, data, createResponseHandler(res));
+		infoProxy.updateOneById(id, data, filter, createResponseHandler(res));
 	});
 
 	router.delete("/:id", function(req, res) {
-		infoProxy.filter = createFilterObjFromParams({
+		var filter = createFilterObjFromParams({
 			belongsTo: config.belongsTo,
 			params: req.params
 		});
 		
 		var id = req.params.id;
-		infoProxy.destroyOneById(id, function(err, result) {
+		infoProxy.destroyOneById(id, filter, function(err, result) {
 			if (err) {
 				return res.send(err);
 			}
 
 			var binId = calculateBinaryId(result);
 
-			binaryProxy.destroyOneById(binId, function() {
+			binaryProxy.destroyOneById(binId, filter, function() {
 				res.send(result);
 			});
 		});

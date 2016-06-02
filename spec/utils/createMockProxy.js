@@ -1,20 +1,20 @@
 module.exports = function createMockProxy() {
 	var mockProxy = {
-		read: function(query, callback) {
+		read: function(query, filter, callback) {
 			callback();
 		},
-		createOne: function(data, callback) {
+		createOne: function(data, filter, callback) {
 			callback(null, {
 				file: {}
 			});
 		},
-		readOneById: function(id, callback) {
+		readOneById: function(id, filter, callback) {
 			callback();
 		},
-		updateOneById: function(id, data, callback) {
+		updateOneById: function(id, data, filter, callback) {
 			callback();
 		},
-		destroyOneById: function(id, callback) {
+		destroyOneById: function(id, filter, callback) {
 			callback();
 		}
 	};
