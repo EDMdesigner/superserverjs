@@ -1,7 +1,24 @@
-var createMongoProxy = require("../../src/proxy/mongo");
+var createMongoProxyCore = require("../../src/proxy/mongoCore");
+
+var mockAsync = {
+	parallel: function(array, done) {
+		setTimeout(function() {
+			done(null, {
+				items: [],
+				count: 0
+			});
+		}, 1);
+	}
+};
+
+var mockExtend = jasmine.createSpy().and.callThrough();
 
 describe("Mongo proxy", function() {
-	
+	var createMongoProxy = createMongoProxyCore({
+		async: mockAsync,
+		extend: mockExtend
+	});
+
 	describe("with invalid config", function() {
 
 		describe("missing model function", function() {
@@ -15,10 +32,11 @@ describe("Mongo proxy", function() {
 	});
 
 	describe("with valid config", function() {
-		
 		var mongoProxy;
 
 		beforeAll(function(done) {
+			spyOn(mockAsync, "parallel").and.callThrough();
+
 			var mockModel = {
 				find: function() {
 					return mockModel;
@@ -77,7 +95,9 @@ describe("Mongo proxy", function() {
 				expect(result.items instanceof Array).toEqual(true);
 				expect(result.items).toEqual([]);
 				expect(result.count).toEqual(0);
-				
+				expect(mockExtend).toHaveBeenCalled();
+				expect(mockAsync.parallel).toHaveBeenCalled();
+
 				done();
 			});
 		});
@@ -93,7 +113,9 @@ describe("Mongo proxy", function() {
 		it("- createOne with filter object should create an item", function(done) {
 			mongoProxy.createOne({user: "User1"}, {user2: "User2"}, function(err) {
 				expect(err).toBeNull();
-				
+				expect(mockExtend).toHaveBeenCalled();
+				expect(mockAsync.parallel).toHaveBeenCalled();
+
 				done();
 			});
 		});
@@ -109,6 +131,8 @@ describe("Mongo proxy", function() {
 		it("- createOne with filter object should create an item", function(done) {
 			mongoProxy.createOne({user: "User1"}, {user2: "User2"}, function(err) {
 				expect(err).toBeNull();
+				expect(mockExtend).toHaveBeenCalled();
+				expect(mockAsync.parallel).toHaveBeenCalled();
 				
 				done();
 			});
@@ -129,6 +153,8 @@ describe("Mongo proxy", function() {
 				expect(err).toBeNull();
 				expect(result).toBeDefined();
 				expect(typeof result).toEqual("object");
+				expect(mockExtend).toHaveBeenCalled();
+				expect(mockAsync.parallel).toHaveBeenCalled();
 				
 				done();
 			});
@@ -145,6 +171,8 @@ describe("Mongo proxy", function() {
 		it("- updateOneById with filter object should return without error", function(done) {
 			mongoProxy.updateOneById("id", "data", {user2: "User2"}, function(err) {
 				expect(err).toBeNull();
+				expect(mockExtend).toHaveBeenCalled();
+				expect(mockAsync.parallel).toHaveBeenCalled();
 
 				done();
 			});
@@ -161,6 +189,8 @@ describe("Mongo proxy", function() {
 		it("- destroyOneById  with filter object should return without error", function(done) {
 			mongoProxy.destroyOneById("id",  {user2: "User2"}, function(err) {
 				expect(err).toBeNull();
+				expect(mockExtend).toHaveBeenCalled();
+				expect(mockAsync.parallel).toHaveBeenCalled();
 
 				done();
 			});
