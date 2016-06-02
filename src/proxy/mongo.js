@@ -15,12 +15,19 @@ module.exports = function createMongoProxy(config) {
 
 	var Model = config.model;
 
-	function read(query, callback) {
+	function read(query, filter, callback) {
+		if (typeof filter === "function") {
+			done = filter;
+			filter = null;
+		}
+
 		if (!query.find) {
 			query.find = {};
 		}
 		
-		extend(query.find, obj.filter);
+		if (filter) {
+			extend(query.find, filter);	
+		}
 
 		async.parallel({
 			items: getItems.bind(null, query),
@@ -67,42 +74,73 @@ module.exports = function createMongoProxy(config) {
 		});
 	}
 
-	function createOne(data, callback) {
+	function createOne(data, filter, callback) {
+		if (typeof filter === "function") {
+			done = filter;
+			filter = null;
+		}
+		
+		if (filter) {
+			extend(data, filter);	
+		}
+
 		Model.create(data, function(err, result) {
 			callback(err, result);
 		});
 	}
 
-	function readOneById(id, callback) {
+	function readOneById(id, filter, callback) {
+		if (typeof filter === "function") {
+			callback = filter;
+			filter = null;
+		}
+
 		var find = {
 			_id: id
 		};
 
-		extend(find, obj.filter);
+		if (filter) {
+			extend(find, filter);	
+		}
 
 		Model.findOne(find, function(err, result) {
 			callback(err, result);
 		});
 	}
 
-	function updateOneById(id, newData, callback) {
+
+	function updateOneById(id, newData, filter, callback) {
+		if (typeof filter === "function") {
+			callback = filter;
+			filter = null;
+		}
+
 		var find = {
 			_id: id
 		};
 
-		extend(find, obj.filter);
+		if (filter) {
+			extend(find, filter);	
+		};
 
 		Model.findOneAndUpdate(find, newData, function(err, result) {
 			callback(err, result);
 		});
 	}
 
-	function destroyOneById(id, callback) {
+	function destroyOneById(id, filter, callback) {
+		if (typeof filter === "function") {
+			callback = filter;
+			filter = null;
+		}
+
 		var find = {
 			_id: id
 		};
 
-		extend(find, obj.filter);
+		if (filter) {
+			extend(find, filter);	
+		};
 
 		Model.findOneAndRemove(find, function(err, result) {
 			callback(err, result);
