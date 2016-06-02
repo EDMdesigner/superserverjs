@@ -69,8 +69,45 @@ describe("Mongo proxy", function() {
 			});
 		});
 
+		it("- read with filter object should return with list of items", function(done) {
+			mongoProxy.read({}, {user: "User1"}, function(err, result) {
+				expect(err).toBeNull();
+				expect(result).toBeDefined();
+				expect(typeof result).toEqual("object");
+				expect(result.items instanceof Array).toEqual(true);
+				expect(result.items).toEqual([]);
+				expect(result.count).toEqual(0);
+				
+				done();
+			});
+		});
+
 		it("- createOne should create an item", function(done) {
 			mongoProxy.createOne({user: "User1"}, function(err) {
+				expect(err).toBeNull();
+				
+				done();
+			});
+		});
+
+		it("- createOne with filter object should create an item", function(done) {
+			mongoProxy.createOne({user: "User1"}, {user2: "User2"}, function(err) {
+				expect(err).toBeNull();
+				
+				done();
+			});
+		});
+
+		it("- createOne should create an item", function(done) {
+			mongoProxy.createOne({user: "User1"}, function(err) {
+				expect(err).toBeNull();
+				
+				done();
+			});
+		});
+
+		it("- createOne with filter object should create an item", function(done) {
+			mongoProxy.createOne({user: "User1"}, {user2: "User2"}, function(err) {
 				expect(err).toBeNull();
 				
 				done();
@@ -87,6 +124,16 @@ describe("Mongo proxy", function() {
 			});
 		});
 
+		it("- readOneById with filter object should return with an item object", function(done) {
+			mongoProxy.readOneById("id", {user2: "User2"}, function(err, result) {
+				expect(err).toBeNull();
+				expect(result).toBeDefined();
+				expect(typeof result).toEqual("object");
+				
+				done();
+			});
+		});
+
 		it("- updateOneById should return without error", function(done) {
 			mongoProxy.updateOneById("id", "data", function(err) {
 				expect(err).toBeNull();
@@ -95,8 +142,24 @@ describe("Mongo proxy", function() {
 			});
 		});
 
+		it("- updateOneById with filter object should return without error", function(done) {
+			mongoProxy.updateOneById("id", "data", {user2: "User2"}, function(err) {
+				expect(err).toBeNull();
+
+				done();
+			});
+		});
+
 		it("- destroyOneById should return without error", function(done) {
 			mongoProxy.destroyOneById("id", function(err) {
+				expect(err).toBeNull();
+
+				done();
+			});
+		});
+
+		it("- destroyOneById  with filter object should return without error", function(done) {
+			mongoProxy.destroyOneById("id",  {user2: "User2"}, function(err) {
 				expect(err).toBeNull();
 
 				done();

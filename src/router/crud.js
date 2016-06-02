@@ -77,7 +77,7 @@ module.exports = function createCRUDRouter(config) {
 			params: req.params
 		});
 
-		proxy.destroyOneById(req.params.id, createResponseHandler(res));
+		proxy.destroyOneById(req.params.id, filter, createResponseHandler(res));
 	});
 
 	return router;
