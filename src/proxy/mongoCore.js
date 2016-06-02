@@ -126,7 +126,7 @@ module.exports = function(dependencies) {
 
 			if (filter) {
 				dependencies.extend(find, filter);	
-			};
+			}
 
 			Model.findOneAndUpdate(find, newData, function(err, result) {
 				callback(err, result);
@@ -145,7 +145,7 @@ module.exports = function(dependencies) {
 
 			if (filter) {
 				dependencies.extend(find, filter);	
-			};
+			}
 
 			Model.findOneAndRemove(find, function(err, result) {
 				callback(err, result);
