@@ -2,7 +2,6 @@ var express = require("express");
 var bodyParser = require("body-parser");
 var mongoose = require("mongoose");
 var cors = require("cors");
-var path = require("path");
 
 var superdataServer = require("../../src/main");
 var createCrudRouter = superdataServer.router.crud;

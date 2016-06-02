@@ -2,7 +2,6 @@ var fs = require("fs");
 var express = require("express");
 var formidable = require("express-formidable");
 var request = require("superagent");
-var extend = require("extend");
 var fileType = require("file-type");
 
 var checkProxy = require("../utils/checkProxy");
