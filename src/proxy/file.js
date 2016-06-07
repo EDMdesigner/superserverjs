@@ -25,7 +25,12 @@ module.exports = function createFileProxy(config) {
 
 	var generateId = config.generateId || idGenerator();
 
-	function read(query, callback) {
+	function read(query, filter, callback) {
+		if (typeof callback === "undefined") {
+			callback = filter;
+			filter = null;
+		}
+
 		fs.readdir(basePath, function(err, data) {
 			if (err) {
 				return callback(err);
@@ -44,7 +49,12 @@ module.exports = function createFileProxy(config) {
 		});
 	}
 
-	function createOne(data, callback) {
+	function createOne(data, filter, callback) {
+		if (typeof callback === "undefined") {
+			callback = filter;
+			filter = null;
+		}
+
 		var id = generateId();
 		fs.writeFile(basePath + id, data, encoding, function(err) {
 			var retObj = {};
@@ -53,20 +63,35 @@ module.exports = function createFileProxy(config) {
 		});
 	}
 
-	function readOneById(id, callback) {
+	function readOneById(id, filter, callback) {
+		if (typeof callback === "undefined") {
+			callback = filter;
+			filter = null;
+		}
+
 		fs.readFile(basePath + id, encoding, function(err, data) {
 			callback(err, data);
 		});
 	}
 
-	function updateOneById(id, newData, callback) {
+	function updateOneById(id, newData, filter, callback) {
+		if (typeof callback === "undefined") {
+			callback = filter;
+			filter = null;
+		}
+
 		//should check if it exists.
 		fs.writeFile(basePath + id, newData, encoding, function(err) {
 			callback(err);
 		});
 	}
 
-	function destroyOneById(id, callback) {
+	function destroyOneById(id, filter, callback) {
+		if (typeof callback === "undefined") {
+			callback = filter;
+			filter = null;
+		}
+
 		fs.unlink(basePath + id, function(err) {
 			callback(err);
 		});
