@@ -54,14 +54,61 @@ app.options("*", cors());
 
 app.use("/user/:userId/galery", createCrudRouter({
 	proxy: mongoProxy,
-	belongsTo: [
-			{
-				param: "userId",
-				prop: "user"
-			}
-		]
+	preHooks: {
+		get: function(req, res, next) {
+			console.log("GET PREHOOK");
+			req.filter = {
+				user: req.params.userId
+			};
+			next();
+		},
+		getOne: function(req, res, next) {
+			console.log("GET ID PREHOOK");
+			req.filter = {
+				user: req.params.userId
+			};
+			next();
+		},
+		post: function(req, res, next) {
+			console.log("POST PREHOOK");
+			req.filter = {
+				user: req.params.userId
+			};
+			next();
+		},
+		put: function(req, res, next) {
+			console.log("PUT PREHOOK");
+			req.filter = {
+				user: req.params.userId
+			};
+			next();
+		},
+		delete: function(req, res, next) {
+			console.log("DELETE PREHOOK");
+			req.filter = {
+				user: req.params.userId
+			};
+			next();
+		}
+	},
+	postHooks: {
+		get: function() {
+			console.log("GET POSTHOOK");
+		},
+		getOne: function() {
+			console.log("GET ID POSTHOOK");
+		},
+		post: function() {
+			console.log("POST POSTHOOK");
+		},
+		put: function() {
+			console.log("PUT POSTHOOK");
+		},
+		delete: function() {
+			console.log("DELETE POSTHOOK");
+		}
+	}
 }));
-
 
 app.listen(port, function(err) {
 	if (err) {

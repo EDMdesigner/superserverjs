@@ -43,6 +43,7 @@
     "gulp-jshint": "^2.0.0",
     "gulp-jsonlint": "^1.1.2",
     "jasmine": "^2.4.1",
+    "jasmine-debug": "^0.1.1",
     "jshint": "^2.9.1",
     "jshint-stylish": "^2.1.0",
     "superagent": "^1.8.3",

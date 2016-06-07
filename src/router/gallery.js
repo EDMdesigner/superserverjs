@@ -98,7 +98,7 @@ module.exports = function createGalleryRouter(config) {
 		query.skip = intify(query.skip, 0);
 		query.limit = intify(query.limit, 10);
 
-		infoProxy.read(query, filter, createResponseHandler(res));
+		infoProxy.read(query, filter, createResponseHandler(req, res));
 	});
 
 	function download(config) {
@@ -173,7 +173,7 @@ module.exports = function createGalleryRouter(config) {
 
 			// extend(info, filterObj);
 
-			infoProxy.createOne(info, filterObj, createResponseHandler(res));
+			infoProxy.createOne(info, filterObj, createResponseHandler(req, res));
 		});
 	}
 
@@ -235,7 +235,7 @@ module.exports = function createGalleryRouter(config) {
 		});
 
 		var id = req.params.id;
-		infoProxy.readOneById(id, filter, createResponseHandler(res));
+		infoProxy.readOneById(id, filter, createResponseHandler(req, res));
 	});
 
 	router.put("/:id", function(req, res) {
@@ -247,7 +247,7 @@ module.exports = function createGalleryRouter(config) {
 		var id = req.params.id;
 		var data = req.body;
 
-		infoProxy.updateOneById(id, data, filter, createResponseHandler(res));
+		infoProxy.updateOneById(id, data, filter, createResponseHandler(req, res));
 	});
 
 	router.delete("/:id", function(req, res) {
