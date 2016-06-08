@@ -166,13 +166,6 @@ module.exports = function createGalleryRouter(config) {
 			response.file = data.file;
 			var info = createInfoObject(response);
 
-			// var filterObj = createFilterObjFromParams({
-			// 	belongsTo: config.belongsTo,
-			// 	params: req.params
-			// });
-
-			// extend(info, filterObj);
-
 			infoProxy.createOne(info, filterObj, createResponseHandler(req, res));
 		});
 	}
@@ -208,9 +201,9 @@ module.exports = function createGalleryRouter(config) {
 					params: req.params
 				});
 
-				extend(info, filterObj);
+				// extend(info, filterObj);
 
-				infoProxy.createOne(info, createResponseHandler(res));
+				infoProxy.createOne(info, filterObj, createResponseHandler(res));
 			}
 		} else {
 			fs.readFile(req.body[fileUploadProp].path, function(err, buffer) {
