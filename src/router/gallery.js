@@ -201,9 +201,7 @@ module.exports = function createGalleryRouter(config) {
 					params: req.params
 				});
 
-				// extend(info, filterObj);
-
-				infoProxy.createOne(info, filterObj, createResponseHandler(res));
+				infoProxy.createOne(info, filterObj, createResponseHandler(req, res));
 			}
 		} else {
 			fs.readFile(req.body[fileUploadProp].path, function(err, buffer) {
