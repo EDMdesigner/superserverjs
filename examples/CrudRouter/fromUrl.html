@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>from url</title>
+</head>
+<script>
+	function onSubmit() {
+		var x=new XMLHttpRequest();
+
+		var input = document.getElementById("urlInput");
+
+		var data = {
+			url: input.value
+		};
+
+		var string = JSON.stringify(data);
+
+		x.open("POST","/gallery",true);
+		x.setRequestHeader("Content-type", "application/json; charset=utf-8");
+		x.setRequestHeader("Content-length", string.length);
+		x.setRequestHeader("Connection", "close");
+
+		x.onreadystatechange = function(){
+			if (x.readyState != 4) {
+				return;
+			}
+
+			if (x.status !== 200 && x.status !== 304) {
+				console.log("HTTP error " + req.status);
+				return;
+			}
+
+			data.resp = JSON.parse(x.responseText);
+			if (data.resp.status=="success"){
+				console.log("That worked!");
+			} else {
+				console.log("That didn't work!");
+			}
+	    };
+	    
+	    x.send(string);
+
+		return false;
+	}
+</script>
+<body>
+<form action="/gallery" method="post" enctype="application/json" onsubmit="return onSubmit()">
+	<input id="urlInput" name="url" />
+	<input type="submit" />
+</form>
+</body>
+</html>

@@ -1,11 +1,15 @@
 var fileType = require("file-type");
 
-module.exports = function createResponseHandler(res) {
+module.exports = function createResponseHandler(req, res, postHook) {
+
 	return function handleResponse(err, result) {
 		if (err) {
-			return res.json({err: err});
+			res.json({err: err});
+			if (postHook) {
+				postHook(err);
+			}
+			return;
 		}
-
 
 		if (Buffer.isBuffer(result)) {
 			var fType = fileType(result);
@@ -14,9 +18,19 @@ module.exports = function createResponseHandler(res) {
 				res.set("Content-Type", fType.mime);
 			}
 			
-			return res.send(result);
+			res.send(result);
+			if (postHook) {
+				postHook(null, result);
+			}
+			return;
 		}
 
-		return res.json(result);
+		res.json(result);
+
+		if (postHook) {
+			postHook(null, result);
+		}
+		
+		return;
 	};
 };

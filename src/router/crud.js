@@ -9,6 +9,7 @@ var createResponseHandler = require("../utils/responseHandler");
 
 module.exports = function createCRUDRouter(config) {
 	config = config || {};
+	config.preHooks = config.preHooks || {};
 
 	checkProxy({
 		proxy: config.proxy,
@@ -20,7 +21,13 @@ module.exports = function createCRUDRouter(config) {
 	var proxy = config.proxy;
 	var router = config.router || express.Router({mergeParams: true});
 
-	router.get("/", function(req, res) {
+	function empty(req, res, next) {
+		next();
+	}
+
+	router.get("/", config.preHooks.get ? config.preHooks.get : empty, function(req, res) {
+		console.log(req.lol);
+
 		var query = {};
 
 		if (req.query) {
@@ -33,24 +40,45 @@ module.exports = function createCRUDRouter(config) {
 		query.skip = intify(query.skip, 0);
 		query.limit = intify(query.limit, 10);
 
-		proxy.read(query, createResponseHandler(res));
+		if (config.postHooks && config.postHooks.get) {
+			proxy.read(query, req.filter, createResponseHandler(req, res, config.postHooks.get));
+		} else {
+			proxy.read(query, req.filter, createResponseHandler(req, res));
+		}
 	});
 
-	router.post("/", function(req, res) {
-		proxy.createOne(req.body, createResponseHandler(res));
+	router.post("/", config.preHooks.post ? config.preHooks.post : empty, function(req, res) {
+		if (config.postHooks && config.postHooks.post) {
+			proxy.createOne(req.body, req.filter, createResponseHandler(req, res, config.postHooks.post));
+		} else {
+			proxy.createOne(req.body, req.filter, createResponseHandler(req, res));
+		}
 	});
 
-	router.get("/:id", function(req, res) {
+	router.get("/:id", config.preHooks.getOne ? config.preHooks.getOne : empty, function(req, res) {
 		var id = req.params.id;
-		proxy.readOneById(id, createResponseHandler(res));
+
+		if (config.postHooks && config.postHooks.getOne) {
+			proxy.readOneById(id, req.filter, createResponseHandler(req, res, config.postHooks.getOne));
+		} else {
+			proxy.readOneById(id, req.filter, createResponseHandler(req, res));
+		}
 	});
 
-	router.put("/:id", function(req, res) {
-		proxy.updateOneById(req.params.id, req.body, createResponseHandler(res));
+	router.put("/:id", config.preHooks.put ? config.preHooks.put : empty, function(req, res) {
+		if (config.postHooks && config.postHooks.put) {
+			proxy.updateOneById(req.params.id, req.body, req.filter, createResponseHandler(req, res, config.postHooks.put));
+		} else {
+			proxy.updateOneById(req.params.id, req.body, req.filter, createResponseHandler(req, res));
+		}
 	});
 
-	router.delete("/:id", function(req, res) {
-		proxy.destroyOneById(req.params.id, createResponseHandler(res));
+	router.delete("/:id", config.preHooks.delete ? config.preHooks.delete : empty, function(req, res) {
+		if (config.postHooks && config.postHooks.delete) {
+			proxy.destroyOneById(req.params.id, req.filter, createResponseHandler(req, res, config.postHooks.delete));
+		} else {
+			proxy.destroyOneById(req.params.id, req.filter, createResponseHandler(req, res));
+		}
 	});
 
 	return router;
