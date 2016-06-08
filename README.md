@@ -9,6 +9,7 @@ As its name suggests, you can create CRUD routes - or a REST endpoint for your a
 Param	| Type	| Required	| Default value	| Description
 ---		| ---	| ---		| ---			| ---
 proxy	| proxy | Yes		|				| A proxy object, which is responsible for storing the data. It can be a mongoProxy, a memoryProxy, a fileProxy, an s3Proxy, etc.
+preHooks	| object | No		|				| An object with functions named after the according HTTP requests (get, post, etc...). The prehook will run before the query.
 router	| express.Router | No | express.Router() | If you need to add middlewares to a router (eg. for authorization) you can pass a prepared router here. Otherwise a new router will be created and returned.
 
 
