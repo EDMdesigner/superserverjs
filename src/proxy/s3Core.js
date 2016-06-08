@@ -50,7 +50,12 @@ module.exports = function(dependencies) {
 			}
 		});
 
-		function read(query, callback) {
+		function read(query, filter, callback) {
+			if (typeof callback === "undefined") {
+				callback = filter;
+				filter = null;
+			}
+
 			s3.listObjects({}, function(err, data) {
 				if (err) {
 					return callback(err);
@@ -63,7 +68,12 @@ module.exports = function(dependencies) {
 			});
 		}
 
-		function createOne(data, callback) {
+		function createOne(data, filter, callback) {
+			if (typeof callback === "undefined") {
+				callback = filter;
+				filter = null;
+			}
+
 			var params = {
 				Key: generateId(),
 				Body: data,
@@ -80,7 +90,12 @@ module.exports = function(dependencies) {
 			});
 		}
 
-		function readOneById(id, callback) {
+		function readOneById(id, filter, callback) {
+			if (typeof callback === "undefined") {
+				callback = filter;
+				filter = null;
+			}
+
 			var params = {
 				Key: id
 			};
@@ -94,7 +109,12 @@ module.exports = function(dependencies) {
 			});
 		}
 
-		function updateOneById(id, newData, callback) {
+		function updateOneById(id, newData, filter, callback) {
+			if (typeof callback === "undefined") {
+				callback = filter;
+				filter = null;
+			}
+
 			var params = {
 				Key: id,
 				Body: newData,
@@ -110,7 +130,12 @@ module.exports = function(dependencies) {
 			});
 		}
 
-		function destroyOneById(id, callback) {
+		function destroyOneById(id, filter, callback) {
+			if (typeof callback === "undefined") {
+				callback = filter;
+				filter = null;
+			}
+			
 			var params = {
 				Key: id
 			};
