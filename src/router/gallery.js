@@ -65,6 +65,8 @@ module.exports = function createGalleryRouter(config) {
 	var fileUploadProp = config.fileUploadProp;
 	var fromUrlProp = config.fromUrlProp;
 
+	var downloadImagesFromUrl = typeof config.downloadImagesFromUrl === "boolean" ? config.downloadImagesFromUrl : true;
+
 	router.use(formidable.parse());
 
 	router.get("/", function(req, res) {
@@ -184,12 +186,32 @@ module.exports = function createGalleryRouter(config) {
 		var contentType = req.get("Content-Type");
 
 		if (contentType.toLowerCase().indexOf("application/json") > -1) {
-			download({
-				req: req,
-				res: res,
-				url: req.body[fromUrlProp],
-				callback: upload
-			});
+			if (downloadImagesFromUrl) {
+				download({
+					req: req,
+					res: res,
+					url: req.body[fromUrlProp],
+					callback: upload
+				});	
+			} else {
+				//dirty hotfix, should be removed. Also, gallery router should be refactored to use crud router with pre and post hooks
+				var url = req.body[fromUrlProp];
+				var slicedUrl = url.slice("/");
+				var info = {
+					title: slicedUrl[slicedUrl.length - 1],
+					url: req.body[fromUrlProp],
+					createdAt: new Date()
+				};
+
+				var filterObj = createFilterObjFromParams({
+					belongsTo: config.belongsTo,
+					params: req.params
+				});
+
+				extend(info, filterObj);
+
+				infoProxy.createOne(info, createResponseHandler(res));
+			}
 		} else {
 			fs.readFile(req.body[fileUploadProp].path, function(err, buffer) {
 				var data = {
