@@ -10,6 +10,7 @@ Param	| Type	| Required	| Default value	| Description
 ---		| ---	| ---		| ---			| ---
 proxy	| proxy | Yes		|				| A proxy object, which is responsible for storing the data. It can be a mongoProxy, a memoryProxy, a fileProxy, an s3Proxy, etc.
 preHooks	| object | No		|				| An object with functions named after the according HTTP requests (get, post, etc...). The prehook will run before the query.
+postHooks	| object | No		|				| An object with functions named after the according HTTP requests (get, post, etc...). The posthook will run after the query.
 router	| express.Router | No | express.Router() | If you need to add middlewares to a router (eg. for authorization) you can pass a prepared router here. Otherwise a new router will be created and returned.
 
 
@@ -202,6 +203,24 @@ var model = mongoose.model("...", schema);
 var proxy = createMongoProxy({
 	model: model
 });
+```
+
+### Extension
+
+Add mongo key-value pairs to the req.filter object. The object will extend the query with the given key-value pairs.
+
+```javascript
+app.use("/user/:userId/galery", createCrudRouter({
+	proxy: mongoProxy,
+	preHooks: {
+		get: function(req, res, next) {
+			console.log("GET PREHOOK");
+			req.filter = {
+				user: req.params.userId
+			};
+			next();
+		},
+		...
 ```
 
 ## s3Proxy
