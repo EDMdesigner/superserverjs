@@ -10,6 +10,9 @@ module.exports = function(dependencies) {
 	if (!dependencies.extend) {
 		throw new Error("extend dependency is mandatory!");
 	}
+
+	var extend = dependencies.extend;
+	var async = dependencies.async;
 	
 	return function createMongoProxy(config) {
 		config = config || {};
@@ -31,10 +34,10 @@ module.exports = function(dependencies) {
 			}
 			
 			if (filter) {
-				dependencies.extend(query.find, filter);	
+				extend(query.find, filter);	
 			}
 
-			dependencies.async.parallel({
+			async.parallel({
 				items: getItems.bind(null, query),
 				count: getItemCount.bind(null, query)
 			}, function(err, result) {
@@ -86,7 +89,7 @@ module.exports = function(dependencies) {
 			}
 			
 			if (filter) {
-				dependencies.extend(data, filter);	
+				extend(data, filter);	
 			}
 
 			Model.create(data, function(err, result) {
@@ -105,7 +108,7 @@ module.exports = function(dependencies) {
 			};
 
 			if (filter) {
-				dependencies.extend(find, filter);	
+				extend(find, filter);	
 			}
 
 			Model.findOne(find, function(err, result) {
@@ -125,7 +128,7 @@ module.exports = function(dependencies) {
 			};
 
 			if (filter) {
-				dependencies.extend(find, filter);	
+				extend(find, filter);	
 			}
 
 			Model.findOneAndUpdate(find, newData, function(err, result) {
@@ -144,7 +147,7 @@ module.exports = function(dependencies) {
 			};
 
 			if (filter) {
-				dependencies.extend(find, filter);	
+				extend(find, filter);	
 			}
 
 			Model.findOneAndRemove(find, function(err, result) {
