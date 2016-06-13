@@ -25,9 +25,7 @@ describe("crudRouter", function() {
 					callback("MockedERROR");
 				},
 				createOne: function(data, filter, callback) {
-					callback("MockedERROR", {
-						file: {}
-					});
+					callback("MockedERROR");
 				},
 				readOneById: function(id, filter, callback) {
 					callback("MockedERROR");
@@ -181,40 +179,51 @@ describe("crudRouter", function() {
 			var mockProxy;
 			var app;
 
-			var preHooks = {
-				get: function(req, res, next) {
-					next();
-				},
-				getOne: function(req, res, next) {
-					next();
-				},
-				post: function(req, res, next) {
-					next();
-				},
-				put: function(req, res, next) {
-					next();
-				},
-				delete: function(req, res, next) {
-					next();
-				}
-			};
+			var preHooks = null;
+			var testHooks = null;
 
 			var postHooks = {
-				get: function() {},
+				get: 	function() {},
 				getOne: function() {},
-				post: function() {},
-				put: function() {},
+				post: 	function() {},
+				put: 	function() {},
 				delete: function() {}
-			};
+			};			
 
 			beforeAll(function() {
-				mockProxy = createMockProxy();
+				testHooks = {
+					get: 	function (req, res, next) { next(); },
+					getOne: function (req, res, next) { next(); },
+					post: 	function (req, res, next) { next(); },
+					put: 	function (req, res, next) { next(); },
+					delete: function (req, res, next) { next(); }
+				};
 				
-				spyOn(preHooks, "get").and.callThrough();
-				spyOn(preHooks, "getOne").and.callThrough();
-				spyOn(preHooks, "post").and.callThrough();
-				spyOn(preHooks, "put").and.callThrough();
-				spyOn(preHooks, "delete").and.callThrough();
+				spyOn(testHooks, "get").and.callThrough();
+				spyOn(testHooks, "getOne").and.callThrough();
+				spyOn(testHooks, "post").and.callThrough();
+				spyOn(testHooks, "put").and.callThrough();
+				spyOn(testHooks, "delete").and.callThrough();
+
+				preHooks = {
+					get: 	[function(req, res, next) { next();	},
+							function(req, res, next) { next(); },
+							testHooks.get],
+					getOne: [function(req, res, next) { next();	},
+							function(req, res, next) { next(); },
+							testHooks.getOne],
+					post: 	[function(req, res, next) { next();	},
+							function(req, res, next) { next(); },
+							testHooks.post],
+					put: 	[function(req, res, next) { next();	},
+							function(req, res, next) { next(); },
+							testHooks.put],
+					delete: [function(req, res, next) { next();	},
+							function(req, res, next) { next(); },
+							testHooks.delete],
+				};
+
+				mockProxy = createMockProxy();
 
 				spyOn(postHooks, "get").and.callThrough();
 				spyOn(postHooks, "getOne").and.callThrough();
@@ -248,7 +257,7 @@ describe("crudRouter", function() {
 						expect(mockProxy.readOneById).not.toHaveBeenCalled();
 						expect(mockProxy.updateOneById).not.toHaveBeenCalled();
 						expect(mockProxy.destroyOneById).not.toHaveBeenCalled();
-						expect(preHooks.get).toHaveBeenCalled();
+						expect(testHooks.get).toHaveBeenCalled();
 						expect(postHooks.get).toHaveBeenCalled();
 						done();
 					});
@@ -268,7 +277,7 @@ describe("crudRouter", function() {
 						expect(mockProxy.readOneById).not.toHaveBeenCalled();
 						expect(mockProxy.updateOneById).not.toHaveBeenCalled();
 						expect(mockProxy.destroyOneById).not.toHaveBeenCalled();
-						expect(preHooks.post).toHaveBeenCalled();
+						expect(testHooks.post).toHaveBeenCalled();
 						expect(postHooks.post).toHaveBeenCalled();
 						done();
 					});
@@ -288,7 +297,7 @@ describe("crudRouter", function() {
 						expect(mockProxy.readOneById).toHaveBeenCalled();
 						expect(mockProxy.updateOneById).not.toHaveBeenCalled();
 						expect(mockProxy.destroyOneById).not.toHaveBeenCalled();
-						expect(preHooks.getOne).toHaveBeenCalled();
+						expect(testHooks.getOne).toHaveBeenCalled();
 						expect(postHooks.getOne).toHaveBeenCalled();
 						done();
 					});
@@ -308,7 +317,7 @@ describe("crudRouter", function() {
 						expect(mockProxy.readOneById).toHaveBeenCalled();
 						expect(mockProxy.updateOneById).toHaveBeenCalled();
 						expect(mockProxy.destroyOneById).not.toHaveBeenCalled();
-						expect(preHooks.put).toHaveBeenCalled();
+						expect(testHooks.put).toHaveBeenCalled();
 						expect(postHooks.put).toHaveBeenCalled();
 						done();
 					});
@@ -328,7 +337,7 @@ describe("crudRouter", function() {
 						expect(mockProxy.readOneById).toHaveBeenCalled();
 						expect(mockProxy.updateOneById).toHaveBeenCalled();
 						expect(mockProxy.destroyOneById).toHaveBeenCalled();
-						expect(preHooks.delete).toHaveBeenCalled();
+						expect(testHooks.delete).toHaveBeenCalled();
 						expect(postHooks.delete).toHaveBeenCalled();
 						done();
 					});
