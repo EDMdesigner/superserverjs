@@ -75,7 +75,7 @@ module.exports = function(dependencies) {
 			}
 
 			var params = {
-				Key: generateId(),
+				Key: generateId(data),
 				Body: data,
 				ACL: "public-read",
 				ContentType: fileType(data).mime
