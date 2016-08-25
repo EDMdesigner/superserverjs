@@ -21,8 +21,6 @@ module.exports = function createCRUDRouter(config) {
 	var router = config.router || express.Router({mergeParams: true});
 
 	function get(req, res) {
-		console.log(req.lol);
-
 		var query = {};
 
 		if (req.query) {
