@@ -1,6 +1,6 @@
-var createMongoProxyCore = require("../../src/proxy/mongoCore");
+const createMongoProxyCore = require("../../src/proxy/mongoCore");
 
-var mockAsync = {
+let mockAsync = {
 	parallel: function(array, done) {
 		setTimeout(function() {
 			done(null, {
@@ -11,10 +11,40 @@ var mockAsync = {
 	}
 };
 
-var mockExtend = jasmine.createSpy().and.callThrough();
+let mockExtend = jasmine.createSpy().and.callThrough();
+
+let mockModel = {
+	find: function() {
+		return mockModel;
+	},
+
+	exec: function(callback) {
+		callback(null, []);
+	},
+
+	count: function(query, callback) {
+		callback(null, 0);
+	},
+
+	create: function(data, callback) {
+		callback(null);
+	},
+
+	findOne: function(id, callback) {
+		callback(null, {});
+	},
+
+	findOneAndUpdate: function(id, data, callback) {
+		callback(null);
+	},
+
+	findOneAndRemove: function(id, callback) {
+		callback(null);
+	}
+};
 
 describe("Mongo proxy", function() {
-	var createMongoProxy = createMongoProxyCore({
+	let createMongoProxy = createMongoProxyCore({
 		async: mockAsync,
 		extend: mockExtend
 	});
@@ -32,40 +62,12 @@ describe("Mongo proxy", function() {
 	});
 
 	describe("with valid config", function() {
-		var mongoProxy;
+		let mongoProxy;
 
 		beforeAll(function(done) {
 			spyOn(mockAsync, "parallel").and.callThrough();
 
-			var mockModel = {
-				find: function() {
-					return mockModel;
-				},
-
-				exec: function(callback) {
-					callback(null, []);
-				},
-
-				count: function(query, callback) {
-					callback(null, 0);
-				},
-
-				create: function(data, callback) {
-					callback(null);
-				},
-
-				findOne: function(id, callback) {
-					callback(null, {});
-				},
-
-				findOneAndUpdate: function(id, data, callback) {
-					callback(null);
-				},
-
-				findOneAndRemove: function(id, callback) {
-					callback(null);
-				}
-			};
+			
 
 			mongoProxy = createMongoProxy({
 				model: mockModel
@@ -82,6 +84,28 @@ describe("Mongo proxy", function() {
 				expect(result.items instanceof Array).toEqual(true);
 				expect(result.items).toEqual([]);
 				expect(result.count).toEqual(0);
+				expect(mockExtend).not.toHaveBeenCalled();
+				expect(mockAsync.parallel).toHaveBeenCalled();
+				
+				done();
+			});
+		});
+
+		it("- read with populate option should return with list of items", function(done) {
+			let mongoProxy = createMongoProxy({
+				model: mockModel,
+				populate: "mockPopulate"
+			});
+
+			mongoProxy.read({}, function(err, result) {
+				expect(err).toBeNull();
+				expect(result).toBeDefined();
+				expect(typeof result).toEqual("object");
+				expect(result.items instanceof Array).toEqual(true);
+				expect(result.items).toEqual([]);
+				expect(result.count).toEqual(0);
+				expect(mockExtend).not.toHaveBeenCalled();
+				expect(mockAsync.parallel).toHaveBeenCalled();
 				
 				done();
 			});
@@ -143,6 +167,33 @@ describe("Mongo proxy", function() {
 				expect(err).toBeNull();
 				expect(result).toBeDefined();
 				expect(typeof result).toEqual("object");
+				expect(mockAsync.parallel).toHaveBeenCalled();
+				
+				done();
+			});
+		});
+
+		it("- readOneById wit populate option should return with an item object", function(done) {
+			let mongoProxy = createMongoProxy({
+				model: mockModel,
+				populate: "mockPopulate"
+			});
+
+			mongoProxy.readOneById("id", function(err, result) {
+				expect(err).toBeNull();
+				expect(result).toBeDefined();
+				expect(typeof result).toEqual("object");
+				
+				done();
+			});
+		});
+
+		it("- readOneById with populate should return with an item object", function(done) {
+			mongoProxy.readOneById("id", function(err, result) {
+				expect(err).toBeNull();
+				expect(result).toBeDefined();
+				expect(typeof result).toEqual("object");
+				expect(mockAsync.parallel).toHaveBeenCalled();
 				
 				done();
 			});

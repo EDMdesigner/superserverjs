@@ -2,7 +2,9 @@
  * MongoDB proxy core
  */
 
-module.exports = function(dependencies) {
+"use strict";
+
+module.exports = (dependencies) => {
 	if (!dependencies.async) {
 		throw new Error("async dependency is mandatory!");
 	}
@@ -11,8 +13,8 @@ module.exports = function(dependencies) {
 		throw new Error("extend dependency is mandatory!");
 	}
 
-	var extend = dependencies.extend;
-	var async = dependencies.async;
+	const extend = dependencies.extend;
+	const async = dependencies.async;
 	
 	return function createMongoProxy(config) {
 		config = config || {};
@@ -21,7 +23,15 @@ module.exports = function(dependencies) {
 			throw new Error("config.model is mandatory!");
 		}
 
-		var Model = config.model;
+		let Model = config.model;
+		let populate = config.populate || null;
+		let populateFields = String();
+
+		if (populate) {
+			for (let field of populate) {
+				populateFields += field + " ";
+			}
+		}
 
 		function read(query, filter, callback) {
 			if (typeof callback === "undefined") {
@@ -40,7 +50,7 @@ module.exports = function(dependencies) {
 			async.parallel({
 				items: getItems.bind(null, query),
 				count: getItemCount.bind(null, query)
-			}, function(err, result) {
+			}, (err, result) => {
 				if (err) {
 					return callback(err);
 				}
@@ -53,10 +63,14 @@ module.exports = function(dependencies) {
 		}
 
 		function getItems(query, done) {
-			var model = Model;
+			let model = Model;
 
 			if (query.find) {
-				model = model.find(query.find);
+				if (populate) {
+					model = model.find(query.find).populate(populateFields);
+				} else {
+					model = model.find(query.find);
+				}
 			}
 
 			if (query.sort) {
@@ -77,7 +91,7 @@ module.exports = function(dependencies) {
 		}
 
 		function getItemCount(query, done) {
-			Model.count(query.find, function(err, result) {
+			Model.count(query.find, (err, result) => {
 				done(err, result);
 			});
 		}
@@ -92,7 +106,7 @@ module.exports = function(dependencies) {
 				extend(data, filter);	
 			}
 
-			Model.create(data, function(err, result) {
+			Model.create(data, (err, result) => {
 				callback(err, result);
 			});
 		}
@@ -103,7 +117,7 @@ module.exports = function(dependencies) {
 				filter = null;
 			}
 
-			var find = {
+			let find = {
 				_id: id
 			};
 
@@ -114,8 +128,11 @@ module.exports = function(dependencies) {
 			Model.findOne(find, function(err, result) {
 				callback(err, result);
 			});
-		}
 
+			Model.findOne(find).populate(populateFields, (err, result) => {
+				callback(err, result);
+			});
+		}
 
 		function updateOneById(id, newData, filter, callback) {
 			if (typeof callback === "undefined") {
@@ -123,7 +140,7 @@ module.exports = function(dependencies) {
 				filter = null;
 			}
 
-			var find = {
+			let find = {
 				_id: id
 			};
 
@@ -131,7 +148,7 @@ module.exports = function(dependencies) {
 				extend(find, filter);	
 			}
 
-			Model.findOneAndUpdate(find, newData, function(err, result) {
+			Model.findOneAndUpdate(find, newData, (err, result) => {
 				callback(err, result);
 			});
 		}
@@ -142,7 +159,7 @@ module.exports = function(dependencies) {
 				filter = null;
 			}
 
-			var find = {
+			let find = {
 				_id: id
 			};
 
@@ -150,17 +167,11 @@ module.exports = function(dependencies) {
 				extend(find, filter);	
 			}
 
-			Model.findOneAndRemove(find, function(err, result) {
+			Model.findOneAndRemove(find, (err, result) => {
 				callback(err, result);
 			});
 		}
 
-		return {
-			read: read,
-			createOne: createOne,
-			readOneById: readOneById,
-			updateOneById: updateOneById,
-			destroyOneById: destroyOneById
-		};
+		return { read, createOne, readOneById, updateOneById, destroyOneById };
 	};
 };
