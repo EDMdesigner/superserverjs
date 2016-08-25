@@ -185,11 +185,11 @@ module.exports = function createGalleryRouter(config) {
 					res: res,
 					url: req.body[fromUrlProp],
 					callback: upload
-				});	
+				});
 			} else {
 				//dirty hotfix, should be removed. Also, gallery router should be refactored to use crud router with pre and post hooks
 				var url = req.body[fromUrlProp];
-				var slicedUrl = url.slice("/");
+				var slicedUrl = url.split("/");
 				var info = {
 					title: slicedUrl[slicedUrl.length - 1],
 					url: req.body[fromUrlProp],
