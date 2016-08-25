@@ -25,7 +25,7 @@ module.exports = (dependencies) => {
 
 		let Model = config.model;
 		let populate = config.populate || null;
-		let populateFields = String();
+		let populateFields = "";
 
 		if (populate) {
 			for (let field of populate) {
