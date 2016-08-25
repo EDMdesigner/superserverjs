@@ -1,3 +1,5 @@
+"use strict";
+
 const createMongoProxyCore = require("../../src/proxy/mongoCore");
 
 let mockAsync = {
