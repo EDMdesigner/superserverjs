@@ -4,10 +4,12 @@ var jshint = require("gulp-jshint");
 var stylish = require("gulp-jscs-stylish");
 var jsonlint = require("gulp-jsonlint");
 var jasmine = require("gulp-jasmine");
+var istanbul = require("gulp-istanbul");
 
 var jsFiles = [
 	"./**/*.js",
 	"!node_modules/**/*",
+	"!coverage/**/*",
 	"!./**/*.built.js"
 ];
 
@@ -15,6 +17,7 @@ var jsonFiles = [
 	".jshintrc",
 	".jscsrc",
 	"!node_modules/**/*",
+	"!coverage/**/*",
 	"./**/*.json"
 ];
 
@@ -61,5 +64,21 @@ gulp.task("jasmine", function() {
 	}));
 });
 
+gulp.task("pre-test", function () {
+	return gulp.src(["src/**/*.js"])
+		// Covering files 
+		.pipe(istanbul())
+		// Force `require` to return covered files 
+		.pipe(istanbul.hookRequire());
+});
+		
+gulp.task("istanbul", ["pre-test"], function () {
+	return gulp.src(["spec/**/*.js"])
+		.pipe(jasmine())
+		// Creating the reports after tests ran 
+		.pipe(istanbul.writeReports())
+		// Enforce a coverage of at least 90% 
+		.pipe(istanbul.enforceThresholds({ thresholds: { global: 50 } }));
+});
 
-gulp.task("test", ["jsonlint", "jshint", "jscs", "jasmine"]);
+gulp.task("test", ["jsonlint", "jshint", "jscs", "istanbul"]);

@@ -203,6 +203,12 @@ var model = mongoose.model("...", schema);
 var proxy = createMongoProxy({
 	model: model
 });
+
+// or add optional populate field option
+var proxy = createMongoProxy({
+	model: model,
+	populate: ["exampleField0", "exampleField1"]
+});
 ```
 
 ### Extension
