@@ -1,11 +1,11 @@
 module.exports = function createFilterObjFromParams(config) {
-	if (!config.belongsTo) {
-		return {};
-	}
-
-	if (!config.params) {
-		return {};
-	}
+	// if (!config.belongsTo) {
+	// 	return {};
+	// }
+	//
+	// if (!config.params) {
+	// 	return {};
+	// }
 
 	var belongsTo = config.belongsTo;
 	var params = config.params;
@@ -16,10 +16,10 @@ module.exports = function createFilterObjFromParams(config) {
 		for (var idx = 0; idx < config.belongsTo.length; idx += 1) {
 			var act = config.belongsTo[idx];
 
-			obj[act.prop] = params[act.param];					
+			obj[act.prop] = params[act.param];
 		}
 	} else {
-		obj[belongsTo.prop] = params[belongsTo.param];
+		obj["belongsTo"] = belongsTo;
 	}
 
 	return obj;

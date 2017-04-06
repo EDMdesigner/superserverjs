@@ -70,10 +70,13 @@ module.exports = function createGalleryRouter(config) {
 	router.use(formidable.parse());
 
 	router.get("/", function(req, res) {
+		console.log("GALLERY GET CALLED", req.params);
 		var filter = createFilterObjFromParams({
-			belongsTo: config.belongsTo,
+			belongsTo: req.params.belongsTo,
 			params: req.params
 		});
+
+		console.log("FILTER:", filter);
 
 		var query = req.query || {};
 
@@ -246,7 +249,7 @@ module.exports = function createGalleryRouter(config) {
 			belongsTo: config.belongsTo,
 			params: req.params
 		});
-		
+
 		var id = req.params.id;
 		infoProxy.destroyOneById(id, filter, function(err, result) {
 			if (err) {
