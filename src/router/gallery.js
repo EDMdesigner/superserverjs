@@ -15,6 +15,7 @@ var createResponseHandler = require("../utils/responseHandler");
 
 module.exports = function createGalleryRouter(config) {
 	config = config || {};
+	config.preHooks = config.preHooks || {};
 
 	var router = config.router || express.Router({mergeParams: true});
 
@@ -69,12 +70,16 @@ module.exports = function createGalleryRouter(config) {
 
 	router.use(formidable.parse());
 
-	router.get("/", function(req, res) {
+	// router.get("/", function(req, res) {
+	function get(req,res) {
 		console.log("GALLERY GET CALLED", req.params);
-		var filter = createFilterObjFromParams({
-			belongsTo: req.params.belongsTo,
-			params: req.params
-		});
+
+		var filter = req.filter;
+
+		// var filter = createFilterObjFromParams({
+		// 	belongsTo: config.belongsTo,
+		// 	params: req.params
+		// });
 
 		console.log("FILTER:", filter);
 
@@ -102,7 +107,22 @@ module.exports = function createGalleryRouter(config) {
 		query.limit = intify(query.limit, 10);
 
 		infoProxy.read(query, filter, createResponseHandler(req, res));
-	});
+	}
+
+	var getParams = ["/"];
+
+	if (config.preHooks.get) {
+		if (typeof config.preHooks.get === "function") {
+			getParams.push(config.preHooks.get);
+		} else if (config.preHooks.get instanceof Array) {
+			getParams = getParams.concat(config.preHooks.get);
+		} else {
+			throw new Error("config.preHooks.get must be a function or Array");
+		}
+	}
+
+	getParams.push(get);
+	router.get.apply(router, getParams);
 
 	function download(config) {
 		var req = config.req;
