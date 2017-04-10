@@ -1,16 +1,16 @@
-var fs = require("fs");
-var express = require("express");
-var formidable = require("express-formidable");
-var request = require("superagent");
-var fileType = require("file-type");
+"use strict";
 
-var checkProxy = require("../utils/checkProxy");
-var checkBelongsTo = require("../utils/checkBelongsTo");
-var createFilterObjFromParams = require("../utils/createFilterObjFromParams");
+const fs = require("fs");
+const express = require("express");
+const formidable = require("express-formidable");
+const request = require("superagent");
+const fileType = require("file-type");
 
-var objectify = require("../utils/objectify");
-var intify = require("../utils/intify");
-var createResponseHandler = require("../utils/responseHandler");
+const checkProxy = require("../utils/checkProxy");
+const checkBelongsTo = require("../utils/checkBelongsTo");
+const objectify = require("../utils/objectify");
+const intify = require("../utils/intify");
+const createResponseHandler = require("../utils/responseHandler");
 
 
 module.exports = function createGalleryRouter(config) {
@@ -27,7 +27,9 @@ module.exports = function createGalleryRouter(config) {
 		throw new Error("config.calculateBinaryId must be a function");
 	}
 
-	if (config.validMimeTypes && !(typeof config.validMimeTypes === "string" || config.validMimeTypes.constructor === Array)) {
+	if (config.validMimeTypes &&
+		!(typeof config.validMimeTypes === "string" ||
+		config.validMimeTypes.constructor === Array)) {
 		throw new Error("config.validMimeTypes must be a string, or array");
 	}
 
@@ -66,10 +68,22 @@ module.exports = function createGalleryRouter(config) {
 	var fileUploadProp = config.fileUploadProp;
 	var fromUrlProp = config.fromUrlProp;
 
-	var downloadImagesFromUrl = typeof config.downloadImagesFromUrl === "boolean" ? config.downloadImagesFromUrl : true;
+	if (typeof config.downloadImagesFromUrl === "boolean") {
+		var downloadImagesFromUrl = config.downloadImagesFromUrl;
+	} else {
+		var downloadImagesFromUrl = true;
+	}
 
 	router.use(formidable.parse());
 
+
+	/*
+		 ██████  ███████ ████████
+		██       ██         ██
+		██   ███ █████      ██
+		██    ██ ██         ██
+		 ██████  ███████    ██
+	*/
 
 	function get(req, res) {
 		var query = req.query || {};
@@ -96,7 +110,11 @@ module.exports = function createGalleryRouter(config) {
 		query.limit = intify(query.limit, 10);
 
 		if (config.postHooks && config.postHooks.get) {
-			infoProxy.read(query, req.filter, createResponseHandler(req, res, config.postHooks.get));
+			infoProxy.read(
+				query,
+				req.filter,
+				createResponseHandler(req, res, config.postHooks.get)
+			);
 		} else {
 			infoProxy.read(query, req.filter, createResponseHandler(req, res));
 		}
@@ -116,6 +134,15 @@ module.exports = function createGalleryRouter(config) {
 
 	getParams.push(get);
 	router.get.apply(router, getParams);
+
+
+	/*
+		██████   ██████  ███████ ████████
+		██   ██ ██    ██ ██         ██
+		██████  ██    ██ ███████    ██
+		██      ██    ██      ██    ██
+		██       ██████  ███████    ██
+	*/
 
 	function download(config) {
 		var req = config.req;
@@ -178,7 +205,11 @@ module.exports = function createGalleryRouter(config) {
 			var info = createInfoObject(response);
 
 			if (config.postHooks && config.postHooks.post) {
-				infoProxy.createOne(info, req.filter, createResponseHandler(req, res, config.postHooks.post));
+				infoProxy.createOne(
+					info,
+					req.filter,
+					createResponseHandler(req, res, config.postHooks.post)
+				);
 			} else {
 				infoProxy.createOne(info, req.filter, createResponseHandler(req, res));
 			}
@@ -198,7 +229,8 @@ module.exports = function createGalleryRouter(config) {
 					callback: upload
 				});
 			} else {
-				//dirty hotfix, should be removed. Also, gallery router should be refactored to use crud router with pre and post hooks
+				// dirty hotfix, should be removed. Also, gallery router should be refactored
+				// to use crud router with pre and post hooks
 				var url = req.body[fromUrlProp];
 				var slicedUrl = url.split("/");
 				var info = {
@@ -208,7 +240,11 @@ module.exports = function createGalleryRouter(config) {
 				};
 
 				if (config.postHooks && config.postHooks.post) {
-					infoProxy.createOne(info, req.filter, createResponseHandler(req, res, config.postHooks.post));
+					infoProxy.createOne(
+						info,
+						req.filter,
+						createResponseHandler(req, res, config.postHooks.post)
+					);
 				} else {
 					infoProxy.createOne(info, req.filter, createResponseHandler(req, res));
 				}
@@ -245,16 +281,29 @@ module.exports = function createGalleryRouter(config) {
 	postParams.push(post);
 	router.post.apply(router, postParams);
 
+
+	/*
+		 ██████  ███████ ████████  ██████  ███    ██ ███████
+		██       ██         ██    ██    ██ ████   ██ ██
+		██   ███ █████      ██    ██    ██ ██ ██  ██ █████
+		██    ██ ██         ██    ██    ██ ██  ██ ██ ██
+		 ██████  ███████    ██     ██████  ██   ████ ███████
+	*/
+
 	function getOne(req, res) {
 		var id = req.params.id;
 
 		// avoid accidentally apply id to the filter from preHooks
-		if (req.filter.id) {
+		if (req.filter && req.filter.id) {
 			delete req.filter.id;
 		}
 
 		if (config.postHooks && config.postHooks.getOne) {
-			infoProxy.readOneById(id, req.filter, createResponseHandler(req, res, config.postHooks.getOne));
+			infoProxy.readOneById(
+				id,
+				req.filter,
+				createResponseHandler(req, res, config.postHooks.getOne)
+			);
 		} else {
 			infoProxy.readOneById(id, req.filter, createResponseHandler(req, res));
 		}
@@ -276,12 +325,25 @@ module.exports = function createGalleryRouter(config) {
 	router.get.apply(router, getOneParams);
 
 
+	/*
+		██████  ██    ██ ████████
+		██   ██ ██    ██    ██
+		██████  ██    ██    ██
+		██      ██    ██    ██
+		██       ██████     ██
+	*/
+
 	function put(req, res) {
 		var id = req.params.id;
 		var data = req.body;
 
 		if (config.postHooks && config.postHooks.put) {
-			infoProxy.updateOneById(id, data, req.filter, createResponseHandler(req, res, config.postHooks.put));
+			infoProxy.updateOneById(
+				id,
+				data,
+				req.filter,
+				createResponseHandler(req, res, config.postHooks.put)
+			);
 		} else {
 			infoProxy.updateOneById(id, data, req.filter, createResponseHandler(req, res));
 		}
@@ -301,6 +363,15 @@ module.exports = function createGalleryRouter(config) {
 
 	putParams.push(put);
 	router.put.apply(router, putParams);
+
+
+	/*
+		██████  ███████ ██      ███████ ████████ ███████
+		██   ██ ██      ██      ██         ██    ██
+		██   ██ █████   ██      █████      ██    █████
+		██   ██ ██      ██      ██         ██    ██
+		██████  ███████ ███████ ███████    ██    ███████
+	*/
 
 	function del(req, res) {
 		var id = req.params.id;
@@ -336,6 +407,7 @@ module.exports = function createGalleryRouter(config) {
 
 	deleteParams.push(del);
 	router.delete.apply(router, deleteParams);
+
 
 	return router;
 };
