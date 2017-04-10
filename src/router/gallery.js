@@ -70,19 +70,8 @@ module.exports = function createGalleryRouter(config) {
 
 	router.use(formidable.parse());
 
-	// router.get("/", function(req, res) {
-	function get(req,res) {
-		console.log("GALLERY GET CALLED", req.params);
 
-		var filter = req.filter;
-
-		// var filter = createFilterObjFromParams({
-		// 	belongsTo: config.belongsTo,
-		// 	params: req.params
-		// });
-
-		console.log("FILTER:", filter);
-
+	function get(req, res) {
 		var query = req.query || {};
 
 		query.find = objectify(query.find);
@@ -106,7 +95,11 @@ module.exports = function createGalleryRouter(config) {
 		query.skip = intify(query.skip, 0);
 		query.limit = intify(query.limit, 10);
 
-		infoProxy.read(query, filter, createResponseHandler(req, res));
+		if (config.postHooks && config.postHooks.get) {
+			infoProxy.read(query, req.filter, createResponseHandler(req, res, config.postHooks.get));
+		} else {
+			infoProxy.read(query, req.filter, createResponseHandler(req, res));
+		}
 	}
 
 	var getParams = ["/"];
@@ -176,12 +169,7 @@ module.exports = function createGalleryRouter(config) {
 			}
 		}
 
-		var filterObj = createFilterObjFromParams({
-			belongsTo: config.belongsTo,
-			params: req.params
-		});
-
-		binaryProxy.createOne(data.buffer, filterObj, function(err, response) {
+		binaryProxy.createOne(data.buffer, req.filter, function(err, response) {
 			if (err) {
 				return res.send(err);
 			}
@@ -189,19 +177,19 @@ module.exports = function createGalleryRouter(config) {
 			response.file = data.file;
 			var info = createInfoObject(response);
 
-			infoProxy.createOne(info, filterObj, createResponseHandler(req, res));
+			if (config.postHooks && config.postHooks.post) {
+				infoProxy.createOne(info, req.filter, createResponseHandler(req, res, config.postHooks.post));
+			} else {
+				infoProxy.createOne(info, req.filter, createResponseHandler(req, res));
+			}
 		});
 	}
 
-	router.post("/", function(req, res) {
-		infoProxy.filter = createFilterObjFromParams({
-			belongsTo: config.belongsTo,
-			params: req.params
-		});
-
+	function post(req, res) {
 		var contentType = req.get("Content-Type");
 
 		if (contentType.toLowerCase().indexOf("application/json") > -1) {
+			console.log("FROMURL");
 			if (downloadImagesFromUrl) {
 				download({
 					req: req,
@@ -219,12 +207,11 @@ module.exports = function createGalleryRouter(config) {
 					createdAt: new Date()
 				};
 
-				var filterObj = createFilterObjFromParams({
-					belongsTo: config.belongsTo,
-					params: req.params
-				});
-
-				infoProxy.createOne(info, filterObj, createResponseHandler(req, res));
+				if (config.postHooks && config.postHooks.post) {
+					infoProxy.createOne(info, req.filter, createResponseHandler(req, res, config.postHooks.post));
+				} else {
+					infoProxy.createOne(info, req.filter, createResponseHandler(req, res));
+				}
 			}
 		} else {
 			fs.readFile(req.body[fileUploadProp].path, function(err, buffer) {
@@ -233,6 +220,7 @@ module.exports = function createGalleryRouter(config) {
 					buffer: buffer
 				};
 
+				// note: posthooks are handled in this function
 				upload({
 					req: req,
 					res: res,
@@ -240,49 +228,114 @@ module.exports = function createGalleryRouter(config) {
 				});
 			});
 		}
-	});
+	}
 
-	router.get("/:id", function(req, res) {
-		var filter = createFilterObjFromParams({
-			belongsTo: config.belongsTo,
-			params: req.params
-		});
+	var postParams = ["/"];
 
+	if (config.preHooks.post) {
+		if (typeof config.preHooks.post === "function") {
+			postParams.push(config.preHooks.post);
+		} else if (config.preHooks.post instanceof Array) {
+			postParams = postParams.concat(config.preHooks.post);
+		} else {
+			throw new Error("config.preHooks.post must be a function or Array");
+		}
+	}
+
+	postParams.push(post);
+	router.post.apply(router, postParams);
+
+	function getOne(req, res) {
 		var id = req.params.id;
-		infoProxy.readOneById(id, filter, createResponseHandler(req, res));
-	});
 
-	router.put("/:id", function(req, res) {
-		var filter = createFilterObjFromParams({
-			belongsTo: config.belongsTo,
-			params: req.params
-		});
+		// avoid accidentally apply id to the filter from preHooks
+		if (req.filter.id) {
+			delete req.filter.id;
+		}
 
+		if (config.postHooks && config.postHooks.getOne) {
+			infoProxy.readOneById(id, req.filter, createResponseHandler(req, res, config.postHooks.getOne));
+		} else {
+			infoProxy.readOneById(id, req.filter, createResponseHandler(req, res));
+		}
+	}
+
+	var getOneParams = ["/:id"];
+
+	if (config.preHooks.getOne) {
+		if (typeof config.preHooks.getOne === "function") {
+			getOneParams.push(config.preHooks.getOne);
+		} else if (config.preHooks.getOne instanceof Array) {
+			getOneParams = getOneParams.concat(config.preHooks.getOne);
+		} else {
+			throw new Error("config.preHooks.getOne must be a function or Array");
+		}
+	}
+
+	getOneParams.push(getOne);
+	router.get.apply(router, getOneParams);
+
+
+	function put(req, res) {
 		var id = req.params.id;
 		var data = req.body;
 
-		infoProxy.updateOneById(id, data, filter, createResponseHandler(req, res));
-	});
+		if (config.postHooks && config.postHooks.put) {
+			infoProxy.updateOneById(id, data, req.filter, createResponseHandler(req, res, config.postHooks.put));
+		} else {
+			infoProxy.updateOneById(id, data, req.filter, createResponseHandler(req, res));
+		}
+	}
 
-	router.delete("/:id", function(req, res) {
-		var filter = createFilterObjFromParams({
-			belongsTo: config.belongsTo,
-			params: req.params
-		});
+	var putParams = ["/:id"];
 
+	if (config.preHooks.put) {
+		if (typeof config.preHooks.put === "function") {
+			putParams.push(config.preHooks.put);
+		} else if (config.preHooks.put instanceof Array) {
+			putParams = putParams.concat(config.preHooks.put);
+		} else {
+			throw new Error("config.preHooks.put must be a function or Array");
+		}
+	}
+
+	putParams.push(put);
+	router.put.apply(router, putParams);
+
+	function del(req, res) {
 		var id = req.params.id;
-		infoProxy.destroyOneById(id, filter, function(err, result) {
+		infoProxy.destroyOneById(id, req.filter, function(err, result) {
 			if (err) {
 				return res.send(err);
 			}
 
 			var binId = calculateBinaryId(result);
 
-			binaryProxy.destroyOneById(binId, filter, function() {
+			binaryProxy.destroyOneById(binId, req.filter, function() {
+				// execute delete posthook when all the delete tasks are don
+				if (config.postHooks && config.postHooks.delete) {
+					config.postHooks.delete();
+				}
+
 				res.send(result);
 			});
 		});
-	});
+	}
+
+	var deleteParams = ["/:id"];
+
+	if (config.preHooks.delete) {
+		if (typeof config.preHooks.delete === "function") {
+			deleteParams.push(config.preHooks.delete);
+		} else if (config.preHooks.delete instanceof Array) {
+			deleteParams = deleteParams.concat(config.preHooks.delete);
+		} else {
+			throw new Error("config.preHooks.delete must be a function or Array");
+		}
+	}
+
+	deleteParams.push(del);
+	router.delete.apply(router, deleteParams);
 
 	return router;
 };
