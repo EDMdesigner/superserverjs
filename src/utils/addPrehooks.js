@@ -12,4 +12,4 @@ module.exports = function addPrehooksToParams(config, params, hook) {
 	}
 
 	return params;
-}
+};
