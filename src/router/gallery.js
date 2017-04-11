@@ -92,19 +92,24 @@ module.exports = function createGalleryRouter(config) {
 
 		query.find = objectify(query.find);
 		query.sort = objectify(query.sort);
-		let key = Object.keys(query.find)[0];
 
-		if (typeof query.find[key] === "string") {
-			try	{
-				let findSplit = query.find[key].split("/");
-				let rgxOptions = findSplit[findSplit.length - 1];
+		let keys = Object.keys(query.find);
 
-				findSplit.pop();
-				findSplit.shift();
-				let rgxPattern = findSplit.join("/");
+		if (keys.length > 0) {
+			let key = keys[0];
 
-				query.find[key] = new RegExp(rgxPattern, rgxOptions);
-			} catch (e) {
+			if (typeof query.find[key] === "string") {
+				try	{
+					let findSplit = query.find[key].split("/");
+					let rgxOptions = findSplit[findSplit.length - 1];
+
+					findSplit.pop();
+					findSplit.shift();
+					let rgxPattern = findSplit.join("/");
+
+					query.find[key] = new RegExp(rgxPattern, rgxOptions);
+				} catch (e) {
+				}
 			}
 		}
 
