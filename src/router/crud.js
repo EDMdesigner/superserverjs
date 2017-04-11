@@ -1,10 +1,14 @@
-var express = require("express");
+"use strict";
 
-var checkProxy = require("../utils/checkProxy");
-var checkBelongsTo = require("../utils/checkBelongsTo");
-var objectify = require("../utils/objectify");
-var intify = require("../utils/intify");
-var createResponseHandler = require("../utils/responseHandler");
+const express = require("express");
+
+const checkProxy = require("../utils/checkProxy");
+const checkBelongsTo = require("../utils/checkBelongsTo");
+const objectify = require("../utils/objectify");
+const intify = require("../utils/intify");
+const createResponseHandlerWithHooks = require("../utils/responseHandler");
+const addPrehooksToParams = require("../utils/addPrehooks");
+
 
 module.exports = function createCRUDRouter(config) {
 	config = config || {};
@@ -20,10 +24,17 @@ module.exports = function createCRUDRouter(config) {
 	var proxy = config.proxy;
 	var router = config.router || express.Router({mergeParams: true});
 
-	function get(req, res) {
-		console.log(req.lol);
 
-		var query = {};
+	/*
+		 ██████  ███████ ████████
+		██       ██         ██
+		██   ███ █████      ██
+		██    ██ ██         ██
+		 ██████  ███████    ██
+	*/
+
+	function get(req, res) {
+		let query = {};
 
 		if (req.query) {
 			query = req.query;
@@ -35,123 +46,114 @@ module.exports = function createCRUDRouter(config) {
 		query.skip = intify(query.skip, 0);
 		query.limit = intify(query.limit, 10);
 
-		if (config.postHooks && config.postHooks.get) {
-			proxy.read(query, req.filter, createResponseHandler(req, res, config.postHooks.get));
-		} else {
-			proxy.read(query, req.filter, createResponseHandler(req, res));
-		}
+		proxy.read(
+			query,
+			req.filter,
+			createResponseHandlerWithHooks(config, req, res, "get")
+		);
 	}
 
-	var getParams = ["/"];
-
-	if (config.preHooks.get) {
-		if (typeof config.preHooks.get === "function") {
-			getParams.push(config.preHooks.get);
-		} else if (config.preHooks.get instanceof Array) {
-			getParams = getParams.concat(config.preHooks.get);
-		} else {
-			throw new Error("config.preHooks.get must be a function or Array");
-		}
-	}
-
+	let getParams = addPrehooksToParams(config, ["/"], "get");
 	getParams.push(get);
 	router.get.apply(router, getParams);
 
 
+	/*
+		██████   ██████  ███████ ████████
+		██   ██ ██    ██ ██         ██
+		██████  ██    ██ ███████    ██
+		██      ██    ██      ██    ██
+		██       ██████  ███████    ██
+	*/
+
 	function post(req, res) {
-		if (config.postHooks && config.postHooks.post) {
-			proxy.createOne(req.body, req.filter, createResponseHandler(req, res, config.postHooks.post));
-		} else {
-			proxy.createOne(req.body, req.filter, createResponseHandler(req, res));
-		}
+		proxy.createOne(
+			req.body,
+			req.filter,
+			createResponseHandlerWithHooks(config, req, res, "post")
+		);
 	}
 
-	var postParams = ["/"];
-
-	if (config.preHooks.post) {
-		if (typeof config.preHooks.post === "function") {
-			postParams.push(config.preHooks.post);
-		} else if (config.preHooks.post instanceof Array) {
-			postParams = postParams.concat(config.preHooks.post);
-		} else {
-			throw new Error("config.preHooks.post must be a function or Array");
-		}
-	}
-
+	let postParams = addPrehooksToParams(config, ["/"], "post");
 	postParams.push(post);
 	router.post.apply(router, postParams);
 
 
+	/*
+		 ██████  ███████ ████████  ██████  ███    ██ ███████
+		██       ██         ██    ██    ██ ████   ██ ██
+		██   ███ █████      ██    ██    ██ ██ ██  ██ █████
+		██    ██ ██         ██    ██    ██ ██  ██ ██ ██
+		 ██████  ███████    ██     ██████  ██   ████ ███████
+	*/
+
 	function getOne(req, res) {
-		var id = req.params.id;
-
-		if (config.postHooks && config.postHooks.getOne) {
-			proxy.readOneById(id, req.filter, createResponseHandler(req, res, config.postHooks.getOne));
-		} else {
-			proxy.readOneById(id, req.filter, createResponseHandler(req, res));
+		// avoid accidentally apply id to the filter from preHooks
+		if (req.filter && req.filter.id) {
+			delete req.filter.id;
 		}
+
+		proxy.readOneById(
+			req.params.id,
+			req.filter,
+			createResponseHandlerWithHooks(config, req, res, "getOne")
+		);
 	}
 
-	var getOneParams = ["/:id"];
-
-	if (config.preHooks.getOne) {
-		if (typeof config.preHooks.getOne === "function") {
-			getOneParams.push(config.preHooks.getOne);
-		} else if (config.preHooks.getOne instanceof Array) {
-			getOneParams = getOneParams.concat(config.preHooks.getOne);
-		} else {
-			throw new Error("config.preHooks.getOne must be a function or Array");
-		}
-	}
-
+	let getOneParams = addPrehooksToParams(config, ["/:id"], "getOne");
 	getOneParams.push(getOne);
 	router.get.apply(router, getOneParams);
 
 
+	/*
+		██████  ██    ██ ████████
+		██   ██ ██    ██    ██
+		██████  ██    ██    ██
+		██      ██    ██    ██
+		██       ██████     ██
+	*/
+
 	function put(req, res) {
-		if (config.postHooks && config.postHooks.put) {
-			proxy.updateOneById(req.params.id, req.body, req.filter, createResponseHandler(req, res, config.postHooks.put));
-		} else {
-			proxy.updateOneById(req.params.id, req.body, req.filter, createResponseHandler(req, res));
+		// avoid accidentally apply id to the filter from preHooks
+		if (req.filter && req.filter.id) {
+			delete req.filter.id;
 		}
+
+		proxy.updateOneById(
+			req.params.id,
+			req.body,
+			req.filter,
+			createResponseHandlerWithHooks(config, req, res, "put")
+		);
 	}
 
-	var putParams = ["/:id"];
-
-	if (config.preHooks.put) {
-		if (typeof config.preHooks.put === "function") {
-			putParams.push(config.preHooks.put);
-		} else if (config.preHooks.put instanceof Array) {
-			putParams = putParams.concat(config.preHooks.put);
-		} else {
-			throw new Error("config.preHooks.put must be a function or Array");
-		}
-	}
-
+	let putParams = addPrehooksToParams(config, ["/:id"], "put");
 	putParams.push(put);
 	router.put.apply(router, putParams);
 
 
+	/*
+		██████  ███████ ██      ███████ ████████ ███████
+		██   ██ ██      ██      ██         ██    ██
+		██   ██ █████   ██      █████      ██    █████
+		██   ██ ██      ██      ██         ██    ██
+		██████  ███████ ███████ ███████    ██    ███████
+	*/
+
 	function del(req, res) {
-		if (config.postHooks && config.postHooks.delete) {
-			proxy.destroyOneById(req.params.id, req.filter, createResponseHandler(req, res, config.postHooks.delete));
-		} else {
-			proxy.destroyOneById(req.params.id, req.filter, createResponseHandler(req, res));
+		// avoid accidentally apply id to the filter from preHooks
+		if (req.filter && req.filter.id) {
+			delete req.filter.id;
 		}
+
+		proxy.destroyOneById(
+			req.params.id,
+			req.filter,
+			createResponseHandlerWithHooks(config, req, res, "delete")
+		);
 	}
 
-	var deleteParams = ["/:id"];
-
-	if (config.preHooks.delete) {
-		if (typeof config.preHooks.delete === "function") {
-			deleteParams.push(config.preHooks.delete);
-		} else if (config.preHooks.delete instanceof Array) {
-			deleteParams = deleteParams.concat(config.preHooks.delete);
-		} else {
-			throw new Error("config.preHooks.delete must be a function or Array");
-		}
-	}
-
+	let deleteParams = addPrehooksToParams(config, ["/:id"], "delete");
 	deleteParams.push(del);
 	router.delete.apply(router, deleteParams);
 

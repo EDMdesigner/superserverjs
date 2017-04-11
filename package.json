@@ -1,6 +1,6 @@
 {
   "name": "superserverjs",
-  "version": "0.0.10",
+  "version": "0.0.11",
   "description": "Superdata motivated server side modules. (Proxies & routers.)",
   "main": "src/main.js",
   "scripts": {
@@ -46,7 +46,6 @@
     "jasmine-debug": "^0.1.1",
     "jshint": "^2.9.1",
     "jshint-stylish": "^2.1.0",
-    "superagent": "^1.8.3",
     "supertest": "^1.2.0"
   },
   "dependencies": {
@@ -58,6 +57,7 @@
     "express-formidable": "^0.1.2",
     "extend": "^3.0.0",
     "file-type": "^3.8.0",
-    "mongoose": "4.4.12"
+    "mongoose": "4.4.12",
+	"superagent": "^1.8.3"
   }
 }

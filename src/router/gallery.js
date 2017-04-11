@@ -1,20 +1,22 @@
-var fs = require("fs");
-var express = require("express");
-var formidable = require("express-formidable");
-var request = require("superagent");
-var fileType = require("file-type");
+"use strict";
 
-var checkProxy = require("../utils/checkProxy");
-var checkBelongsTo = require("../utils/checkBelongsTo");
-var createFilterObjFromParams = require("../utils/createFilterObjFromParams");
+const fs = require("fs");
+const express = require("express");
+const formidable = require("express-formidable");
+const request = require("superagent");
+const fileType = require("file-type");
 
-var objectify = require("../utils/objectify");
-var intify = require("../utils/intify");
-var createResponseHandler = require("../utils/responseHandler");
+const checkProxy = require("../utils/checkProxy");
+const checkBelongsTo = require("../utils/checkBelongsTo");
+const objectify = require("../utils/objectify");
+const intify = require("../utils/intify");
+const createResponseHandlerWithHooks = require("../utils/responseHandler");
+const addPrehooksToParams = require("../utils/addPrehooks");
 
 
 module.exports = function createGalleryRouter(config) {
 	config = config || {};
+	config.preHooks = config.preHooks || {};
 
 	var router = config.router || express.Router({mergeParams: true});
 
@@ -26,7 +28,10 @@ module.exports = function createGalleryRouter(config) {
 		throw new Error("config.calculateBinaryId must be a function");
 	}
 
-	if (config.validMimeTypes && !(typeof config.validMimeTypes === "string" || config.validMimeTypes.constructor === Array)) {
+	if (config.validMimeTypes &&
+		!(typeof config.validMimeTypes === "string" ||
+		config.validMimeTypes.constructor === Array))
+	{
 		throw new Error("config.validMimeTypes must be a string, or array");
 	}
 
@@ -65,57 +70,87 @@ module.exports = function createGalleryRouter(config) {
 	var fileUploadProp = config.fileUploadProp;
 	var fromUrlProp = config.fromUrlProp;
 
-	var downloadImagesFromUrl = typeof config.downloadImagesFromUrl === "boolean" ? config.downloadImagesFromUrl : true;
+	if (typeof config.downloadImagesFromUrl === "boolean") {
+		var downloadImagesFromUrl = config.downloadImagesFromUrl;
+	} else {
+		var downloadImagesFromUrl = true;
+	}
 
 	router.use(formidable.parse());
 
-	router.get("/", function(req, res) {
-		var filter = createFilterObjFromParams({
-			belongsTo: config.belongsTo,
-			params: req.params
-		});
 
-		var query = req.query || {};
+	/*
+		 ██████  ███████ ████████
+		██       ██         ██
+		██   ███ █████      ██
+		██    ██ ██         ██
+		 ██████  ███████    ██
+	*/
+
+	function get(req, res) {
+		let query = req.query || {};
 
 		query.find = objectify(query.find);
 		query.sort = objectify(query.sort);
-		var key = Object.keys(query.find)[0];
 
-		if (typeof query.find[key] === "string") {
-			try	{
-				var findSplit = query.find[key].split("/");
-				var rgxOptions = findSplit[findSplit.length - 1];
+		let keys = Object.keys(query.find);
 
-				findSplit.pop();
-				findSplit.shift();
-				var rgxPattern = findSplit.join("/");
+		if (keys.length > 0) {
+			let key = keys[0];
 
-				query.find[key] = new RegExp(rgxPattern, rgxOptions);
-			} catch (e) {
+			if (typeof query.find[key] === "string") {
+				try	{
+					let findSplit = query.find[key].split("/");
+					let rgxOptions = findSplit[findSplit.length - 1];
+
+					findSplit.pop();
+					findSplit.shift();
+					let rgxPattern = findSplit.join("/");
+
+					query.find[key] = new RegExp(rgxPattern, rgxOptions);
+				} catch (e) {
+				}
 			}
 		}
 
 		query.skip = intify(query.skip, 0);
 		query.limit = intify(query.limit, 10);
 
-		infoProxy.read(query, filter, createResponseHandler(req, res));
-	});
+		infoProxy.read(
+			query,
+			req.filter,
+			createResponseHandlerWithHooks(config, req, res, "get")
+		);
+	}
+
+	let getParams = addPrehooksToParams(config, ["/"], "get");
+	getParams.push(get);
+	router.get.apply(router, getParams);
+
+
+	/*
+		██████   ██████  ███████ ████████
+		██   ██ ██    ██ ██         ██
+		██████  ██    ██ ███████    ██
+		██      ██    ██      ██    ██
+		██       ██████  ███████    ██
+	*/
 
 	function download(config) {
-		var req = config.req;
-		var res = config.res;
-		var callback = config.callback;
-		var url = config.url;
-		var name = url.split("/");
+		let req = config.req;
+		let res = config.res;
+		let callback = config.callback;
+		let url = config.url;
+		let name = url.split("/");
 
 		name = name[name.length - 1];
 
-		request.get(url).end(function(err, response) {
+		request.get(url).end((err, response) => {
 			if (err) {
 				return res.send(err);
 			}
 
-			var data = {
+			let data = {
 				buffer: response.body,
 				file: {
 					name: name
@@ -153,12 +188,7 @@ module.exports = function createGalleryRouter(config) {
 			}
 		}
 
-		var filterObj = createFilterObjFromParams({
-			belongsTo: config.belongsTo,
-			params: req.params
-		});
-
-		binaryProxy.createOne(data.buffer, filterObj, function(err, response) {
+		binaryProxy.createOne(data.buffer, req.filter, function(err, response) {
 			if (err) {
 				return res.send(err);
 			}
@@ -166,20 +196,21 @@ module.exports = function createGalleryRouter(config) {
 			response.file = data.file;
 			var info = createInfoObject(response);
 
-			infoProxy.createOne(info, filterObj, createResponseHandler(req, res));
+			infoProxy.createOne(
+				info,
+				req.filter,
+				createResponseHandlerWithHooks(config, req, res, "post")
+			);
 		});
 	}
 
-	router.post("/", function(req, res) {
-		infoProxy.filter = createFilterObjFromParams({
-			belongsTo: config.belongsTo,
-			params: req.params
-		});
-
+	function post(req, res) {
 		var contentType = req.get("Content-Type");
 
 		if (contentType.toLowerCase().indexOf("application/json") > -1) {
+			console.log("FROMURL");
 			if (downloadImagesFromUrl) {
+				// if image should be downloaded
 				download({
 					req: req,
 					res: res,
@@ -187,7 +218,7 @@ module.exports = function createGalleryRouter(config) {
 					callback: upload
 				});
 			} else {
-				//dirty hotfix, should be removed. Also, gallery router should be refactored to use crud router with pre and post hooks
+				// if image should be referenced with original URL
 				var url = req.body[fromUrlProp];
 				var slicedUrl = url.split("/");
 				var info = {
@@ -196,12 +227,11 @@ module.exports = function createGalleryRouter(config) {
 					createdAt: new Date()
 				};
 
-				var filterObj = createFilterObjFromParams({
-					belongsTo: config.belongsTo,
-					params: req.params
-				});
-
-				infoProxy.createOne(info, filterObj, createResponseHandler(req, res));
+				infoProxy.createOne(
+					info,
+					req.filter,
+					createResponseHandlerWithHooks(config, req, res, "post")
+				);
 			}
 		} else {
 			fs.readFile(req.body[fileUploadProp].path, function(err, buffer) {
@@ -210,6 +240,7 @@ module.exports = function createGalleryRouter(config) {
 					buffer: buffer
 				};
 
+				// note: posthooks are handled in this function
 				upload({
 					req: req,
 					res: res,
@@ -217,49 +248,106 @@ module.exports = function createGalleryRouter(config) {
 				});
 			});
 		}
-	});
+	}
 
-	router.get("/:id", function(req, res) {
-		var filter = createFilterObjFromParams({
-			belongsTo: config.belongsTo,
-			params: req.params
-		});
+	let postParams = addPrehooksToParams(config, ["/"], "post");
+	postParams.push(post);
+	router.post.apply(router, postParams);
 
-		var id = req.params.id;
-		infoProxy.readOneById(id, filter, createResponseHandler(req, res));
-	});
 
-	router.put("/:id", function(req, res) {
-		var filter = createFilterObjFromParams({
-			belongsTo: config.belongsTo,
-			params: req.params
-		});
+	/*
+		 ██████  ███████ ████████  ██████  ███    ██ ███████
+		██       ██         ██    ██    ██ ████   ██ ██
+		██   ███ █████      ██    ██    ██ ██ ██  ██ █████
+		██    ██ ██         ██    ██    ██ ██  ██ ██ ██
+		 ██████  ███████    ██     ██████  ██   ████ ███████
+	*/
 
+	function getOne(req, res) {
+		let id = req.params.id;
+
+		// avoid accidentally apply id to the filter from preHooks
+		if (req.filter && req.filter.id) {
+			delete req.filter.id;
+		}
+
+		infoProxy.readOneById(
+			id,
+			req.filter,
+			createResponseHandlerWithHooks(config, req, res, "getOne")
+		);
+	}
+
+	let getOneParams = addPrehooksToParams(config, ["/:id"], "getOne");
+	getOneParams.push(getOne);
+	router.get.apply(router, getOneParams);
+
+
+	/*
+		██████  ██    ██ ████████
+		██   ██ ██    ██    ██
+		██████  ██    ██    ██
+		██      ██    ██    ██
+		██       ██████     ██
+	*/
+
+	function put(req, res) {
 		var id = req.params.id;
 		var data = req.body;
 
-		infoProxy.updateOneById(id, data, filter, createResponseHandler(req, res));
-	});
+		// avoid accidentally apply id to the filter from preHooks
+		if (req.filter && req.filter.id) {
+			delete req.filter.id;
+		}
 
-	router.delete("/:id", function(req, res) {
-		var filter = createFilterObjFromParams({
-			belongsTo: config.belongsTo,
-			params: req.params
-		});
-		
-		var id = req.params.id;
-		infoProxy.destroyOneById(id, filter, function(err, result) {
+		infoProxy.updateOneById(
+			id,
+			data,
+			req.filter,
+			createResponseHandlerWithHooks(config, req, res, "put")
+		);
+	}
+
+	let putParams = addPrehooksToParams(config, ["/:id"], "put");
+	putParams.push(put);
+	router.put.apply(router, putParams);
+
+
+	/*
+		██████  ███████ ██      ███████ ████████ ███████
+		██   ██ ██      ██      ██         ██    ██
+		██   ██ █████   ██      █████      ██    █████
+		██   ██ ██      ██      ██         ██    ██
+		██████  ███████ ███████ ███████    ██    ███████
+	*/
+
+	function del(req, res) {
+		let id = req.params.id;
+
+		// avoid accidentally apply id to the filter from preHooks
+		if (req.filter && req.filter.id) {
+			delete req.filter.id;
+		}
+
+		infoProxy.destroyOneById(id, req.filter, function(err, result) {
 			if (err) {
 				return res.send(err);
 			}
 
-			var binId = calculateBinaryId(result);
+			let binId = calculateBinaryId(result);
 
-			binaryProxy.destroyOneById(binId, filter, function() {
-				res.send(result);
-			});
+			binaryProxy.destroyOneById(
+				binId,
+				req.filter,
+				createResponseHandlerWithHooks(config, req, res, "delete")
+			);
 		});
-	});
+	}
+
+	let deleteParams = addPrehooksToParams(config, ["/:id"], "delete");
+	deleteParams.push(del);
+	router.delete.apply(router, deleteParams);
+
 
 	return router;
 };
