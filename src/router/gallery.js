@@ -79,6 +79,28 @@ module.exports = function createGalleryRouter(config) {
 	router.use(formidable.parse());
 
 
+	var getBinaryProxy = config.getBinaryProxy || function(req, callback) {
+		callback(null, binaryProxy);
+	};
+
+	(function() {
+		//igy hivod kivulrol
+		var connectionCache = {};
+
+		createGalleryProxy({
+			//... other params
+			getBinaryProxy: function(req, callback) {
+				var cached = connectionCache[req.params.apiKey];
+				if (cached) {
+					return callback(null, cached);
+				}
+
+				//lekerdezem, eltarolom, meghívom a callbacket.
+			}
+		});
+	}());
+
+
 	/*
 		 ██████  ███████ ████████
 		██       ██         ██
@@ -188,19 +210,25 @@ module.exports = function createGalleryRouter(config) {
 			}
 		}
 
-		binaryProxy.createOne(data.buffer, req.filter, function(err, response) {
+		getBinaryProxy(req, function(err, binaryProxy) {
 			if (err) {
-				return res.send(err);
+				//do sg.
 			}
 
-			response.file = data.file;
-			var info = createInfoObject(response);
+			binaryProxy.createOne(data.buffer, req.filter, function(err, response) {
+				if (err) {
+					return res.send(err);
+				}
 
-			infoProxy.createOne(
-				info,
-				req.filter,
-				createResponseHandlerWithHooks(config, req, res, "post")
-			);
+				response.file = data.file;
+				var info = createInfoObject(response);
+
+				infoProxy.createOne(
+					info,
+					req.filter,
+					createResponseHandlerWithHooks(config, req, res, "post")
+				);
+			});
 		});
 	}
 
