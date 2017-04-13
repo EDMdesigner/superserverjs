@@ -5,6 +5,7 @@ const express = require("express");
 const formidable = require("express-formidable");
 const request = require("superagent");
 const fileType = require("file-type");
+const waterfall = require("async/waterfall");
 
 const checkProxy = require("../utils/checkProxy");
 const checkBelongsTo = require("../utils/checkBelongsTo");
@@ -45,24 +46,11 @@ module.exports = function createGalleryRouter(config) {
 
 	checkBelongsTo(config.belongsTo);
 
-	checkProxy({
-		proxy: config.binaryProxy,
-		msgPrefix: "config.binaryProxy"
-	});
-
-	checkProxy({
-		proxy: config.infoProxy,
-		msgPrefix: "config.infoProxy"
-	});
-
 	var validMimeTypes = config.validMimeTypes;
 
 	if (validMimeTypes && typeof validMimeTypes === "string") {
 		validMimeTypes = [validMimeTypes];
 	}
-
-	var binaryProxy = config.binaryProxy;
-	var infoProxy = config.infoProxy;
 
 	var createInfoObject = config.createInfoObject;
 	var calculateBinaryId = config.calculateBinaryId;
@@ -78,28 +66,13 @@ module.exports = function createGalleryRouter(config) {
 
 	router.use(formidable.parse());
 
-
-	var getBinaryProxy = config.getBinaryProxy || function(req, callback) {
-		callback(null, binaryProxy);
+	var getInfoProxy = config.getInfoProxy || function(req, callback) {
+		callback(null, config.infoProxy);
 	};
 
-	(function() {
-		//igy hivod kivulrol
-		var connectionCache = {};
-
-		createGalleryProxy({
-			//... other params
-			getBinaryProxy: function(req, callback) {
-				var cached = connectionCache[req.params.apiKey];
-				if (cached) {
-					return callback(null, cached);
-				}
-
-				//lekerdezem, eltarolom, meghívom a callbacket.
-			}
-		});
-	}());
-
+	var getBinaryProxy = config.getBinaryProxy || function(req, callback) {
+		callback(null, config.binaryProxy);
+	};
 
 	/*
 		 ██████  ███████ ████████
@@ -138,11 +111,24 @@ module.exports = function createGalleryRouter(config) {
 		query.skip = intify(query.skip, 0);
 		query.limit = intify(query.limit, 10);
 
-		infoProxy.read(
-			query,
-			req.filter,
-			createResponseHandlerWithHooks(config, req, res, "get")
-		);
+
+		getInfoProxy(req, function(err, infoProxy) {
+			if (err) {
+				console.error(err);
+			}
+
+			checkProxy({
+				proxy: infoProxy,
+				msgPrefix: "infoProxy"
+			});
+
+			infoProxy.read(
+				query,
+				req.filter,
+				createResponseHandlerWithHooks(config, req, res, "get")
+			);
+		});
+
 	}
 
 	let getParams = addPrehooksToParams(config, ["/"], "get");
@@ -210,25 +196,60 @@ module.exports = function createGalleryRouter(config) {
 			}
 		}
 
-		getBinaryProxy(req, function(err, binaryProxy) {
-			if (err) {
-				//do sg.
-			}
+		waterfall([
+			function(callback) {
+				getBinaryProxy(req, function(err, binaryProxy) {
+					if (err) {
+						return callback(err);
+					}
 
-			binaryProxy.createOne(data.buffer, req.filter, function(err, response) {
-				if (err) {
-					return res.send(err);
-				}
+					checkProxy({
+						proxy: binaryProxy,
+						msgPrefix: "binaryProxy"
+					});
 
-				response.file = data.file;
-				var info = createInfoObject(response);
-
-				infoProxy.createOne(
-					info,
+					callback(null, binaryProxy);
+				});
+			},
+			function(binaryProxy, callback) {
+				binaryProxy.createOne(
+					data.buffer,
 					req.filter,
-					createResponseHandlerWithHooks(config, req, res, "post")
+					function(err, response) {
+						if (err) {
+							return callback(err);
+						}
+
+						callback(null, response);
+					}
 				);
-			});
+			},
+			function(response, callback) {
+				getInfoProxy(req, function(err, infoProxy) {
+					if (err) {
+						return callback(err);
+					}
+
+					checkProxy({
+						proxy: infoProxy,
+						msgPrefix: "infoProxy"
+					});
+
+					callback(null, response, infoProxy);
+				});
+			}
+		], function (err, response, infoProxy) {
+			if (err) {
+				return res.send({"err": err, "success": false});
+			}
+			response.file = data.file;
+			var info = createInfoObject(response);
+
+			infoProxy.createOne(
+				info,
+				req.filter,
+				createResponseHandlerWithHooks(config, req, res, "post")
+			);
 		});
 	}
 
@@ -255,11 +276,22 @@ module.exports = function createGalleryRouter(config) {
 					createdAt: new Date()
 				};
 
-				infoProxy.createOne(
-					info,
-					req.filter,
-					createResponseHandlerWithHooks(config, req, res, "post")
-				);
+				getInfoProxy(req, function(err, infoProxy) {
+					if (err) {
+						console.error(err);
+					}
+
+					checkProxy({
+						proxy: infoProxy,
+						msgPrefix: "infoProxy"
+					});
+
+					infoProxy.createOne(
+						info,
+						req.filter,
+						createResponseHandlerWithHooks(config, req, res, "post")
+					);
+				});
 			}
 		} else {
 			fs.readFile(req.body[fileUploadProp].path, function(err, buffer) {
@@ -299,11 +331,22 @@ module.exports = function createGalleryRouter(config) {
 			delete req.filter.id;
 		}
 
-		infoProxy.readOneById(
-			id,
-			req.filter,
-			createResponseHandlerWithHooks(config, req, res, "getOne")
-		);
+		getInfoProxy(req, function(err, infoProxy) {
+			if (err) {
+				console.error(err);
+			}
+
+			checkProxy({
+				proxy: infoProxy,
+				msgPrefix: "infoProxy"
+			});
+
+			infoProxy.readOneById(
+				id,
+				req.filter,
+				createResponseHandlerWithHooks(config, req, res, "getOne")
+			);
+		});
 	}
 
 	let getOneParams = addPrehooksToParams(config, ["/:id"], "getOne");
@@ -328,12 +371,23 @@ module.exports = function createGalleryRouter(config) {
 			delete req.filter.id;
 		}
 
-		infoProxy.updateOneById(
-			id,
-			data,
-			req.filter,
-			createResponseHandlerWithHooks(config, req, res, "put")
-		);
+		getInfoProxy(req, function(err, infoProxy) {
+			if (err) {
+				console.error(err);
+			}
+
+			checkProxy({
+				proxy: infoProxy,
+				msgPrefix: "infoProxy"
+			});
+
+			infoProxy.updateOneById(
+				id,
+				data,
+				req.filter,
+				createResponseHandlerWithHooks(config, req, res, "put")
+			);
+		});
 	}
 
 	let putParams = addPrehooksToParams(config, ["/:id"], "put");
@@ -357,12 +411,54 @@ module.exports = function createGalleryRouter(config) {
 			delete req.filter.id;
 		}
 
-		infoProxy.destroyOneById(id, req.filter, function(err, result) {
-			if (err) {
-				return res.send(err);
-			}
+		waterfall([
+			function(callback) {
+				getInfoProxy(req, function(err, infoProxy) {
+					if (err) {
+						return callback(err);
+					}
 
-			let binId = calculateBinaryId(result);
+					checkProxy({
+						proxy: infoProxy,
+						msgPrefix: "infoProxy"
+					});
+
+					callback(null, infoProxy);
+				});
+			},
+			function(infoProxy, callback) {
+				infoProxy.destroyOneById(id, req.filter, function(err, result) {
+					if (err) {
+						return callback(err);
+					}
+
+					if (!result) {
+						return callback("Item does not exist.");
+					}
+
+					let binId = calculateBinaryId(result);
+
+					callback(null, binId);
+				});
+			},
+			function(binId, callback) {
+				getBinaryProxy(req, function(err, binaryProxy) {
+					if (err) {
+						return callback(err);
+					}
+
+					checkProxy({
+						proxy: binaryProxy,
+						msgPrefix: "binaryProxy"
+					});
+
+					callback(null, binId, binaryProxy);
+				});
+			}
+		], function (err, binId, binaryProxy) {
+			if (err) {
+				return res.send({"err": err, "success": false});
+			}
 
 			binaryProxy.destroyOneById(
 				binId,
