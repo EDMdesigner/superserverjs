@@ -23,7 +23,7 @@ describe("Gallery router", function() {
 			});
 		});
 
-		it("config.fileUploadProp", function() {	
+		it("config.fileUploadProp", function() {
 			expect(function() {
 				createGalleryRouter({
 					createInfoObject: function() {},
@@ -301,7 +301,9 @@ describe("Gallery router", function() {
 					expect(mockBinaryProxy.createOne).not.toHaveBeenCalled();
 					expect(mockBinaryProxy.readOneById).not.toHaveBeenCalled();
 					expect(mockBinaryProxy.updateOneById).not.toHaveBeenCalled();
-					expect(mockBinaryProxy.destroyOneById).toHaveBeenCalled();
+					// only call this function if the referred object exists in
+					// the infoProxy
+					expect(mockBinaryProxy.destroyOneById).not.toHaveBeenCalled();
 
 					done();
 				});

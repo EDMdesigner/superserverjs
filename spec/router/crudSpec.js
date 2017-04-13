@@ -48,7 +48,7 @@ describe("crudRouter", function() {
 
 			var app = null;
 
-			beforeAll(function() {				
+			beforeAll(function() {
 				spyOn(mockProxy, "read").and.callThrough();
 				spyOn(mockProxy, "createOne").and.callThrough();
 				spyOn(mockProxy, "readOneById").and.callThrough();
@@ -188,7 +188,7 @@ describe("crudRouter", function() {
 				post: 	function() {},
 				put: 	function() {},
 				delete: function() {}
-			};			
+			};
 
 			beforeAll(function() {
 				testHooks = {
@@ -198,7 +198,7 @@ describe("crudRouter", function() {
 					put: 	function (req, res, next) { next(); },
 					delete: function (req, res, next) { next(); }
 				};
-				
+
 				spyOn(testHooks, "get").and.callThrough();
 				spyOn(testHooks, "getOne").and.callThrough();
 				spyOn(testHooks, "post").and.callThrough();
@@ -350,7 +350,7 @@ describe("crudRouter", function() {
 
 			beforeAll(function() {
 				mockProxy = createMockProxy();
-				
+
 				app = express();
 				app.use(bodyParser.urlencoded({limit: "2mb", extended: true, parameterLimit: 10000}));
 				app.use(bodyParser.json({limit: "2mb"}));

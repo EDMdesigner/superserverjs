@@ -1,69 +1,67 @@
 module.exports = function proxyInterfaceHelper(config) {
 	var configObj = config.config || {};
-	var factoryMethod = config.factoryMethod;
 	var msgPrefix = config.msgPrefix;
-	var prop = config.prop;
+	var checkProxy = require("../../src/utils/checkProxy");
 
 	describe(msgPrefix, function() {
-		it(msgPrefix + " is mandatory", function() {
-			expect(function() {
-				factoryMethod(configObj);
-			}).toThrowError(msgPrefix + " is mandatory");
-		});
-
 		it(msgPrefix + ".read", function() {
 			expect(function() {
-				configObj[prop] = {
-					read: "yo"
-				};
+				configObj.read = "yo";
 
-				factoryMethod(configObj);
+				checkProxy({
+					proxy: configObj,
+					msgPrefix: msgPrefix
+				});
 			}).toThrowError(msgPrefix + ".read must be a function");
 		});
 
 		it(msgPrefix + ".createOne", function() {
 			expect(function() {
-				configObj[prop] = {
-					read: function() {}
-				};
+				configObj.read = function() {};
 
-				factoryMethod(configObj);
+				checkProxy({
+					proxy: configObj,
+					msgPrefix: msgPrefix
+				});
 			}).toThrowError(msgPrefix + ".createOne must be a function");
 		});
 
 		it(msgPrefix + ".readOneById", function() {
 			expect(function() {
-				configObj[prop] = {
-					read: function() {},
-					createOne: function() {}
-				};
+				configObj.read = function() {};
+				configObj.createOne = function() {};
 
-				factoryMethod(configObj);
+				checkProxy({
+					proxy: configObj,
+					msgPrefix: msgPrefix
+				});
 			}).toThrowError(msgPrefix + ".readOneById must be a function");
 		});
 
 		it(msgPrefix + ".updateOneById", function() {
 			expect(function() {
-				configObj[prop] = {
-					read: function() {},
-					createOne: function() {},
-					readOneById: function() {}
-				};
+				configObj.read = function() {};
+				configObj.createOne = function() {};
+				configObj.readOneById = function() {};
 
-				factoryMethod(configObj);
+				checkProxy({
+					proxy: configObj,
+					msgPrefix: msgPrefix
+				});
 			}).toThrowError(msgPrefix + ".updateOneById must be a function");
 		});
 
 		it(msgPrefix + ".destroyOneById", function() {
 			expect(function() {
-				configObj[prop] = {
-					read: function() {},
-					createOne: function() {},
-					readOneById: function() {},
-					updateOneById: function() {}
-				};
-				
-				factoryMethod(configObj);
+				configObj.read = function() {};
+				configObj.createOne = function() {};
+				configObj.readOneById = function() {};
+				configObj.updateOneById = function() {};
+
+				checkProxy({
+					proxy: configObj,
+					msgPrefix: msgPrefix
+				});
 			}).toThrowError(msgPrefix + ".destroyOneById must be a function");
 		});
 	});

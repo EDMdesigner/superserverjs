@@ -66,6 +66,14 @@ module.exports = function createGalleryRouter(config) {
 
 	router.use(formidable.parse());
 
+	if (!(config.infoProxy || config.getInfoProxy)) {
+		throw new Error("No infoProxy information supplied.");
+	}
+
+	if (!(config.binaryProxy || config.getBinaryProxy)) {
+		throw new Error("No binaryProxy information supplied.");
+	}
+
 	var getInfoProxy = config.getInfoProxy || function(req, callback) {
 		callback(null, config.infoProxy);
 	};
@@ -114,7 +122,7 @@ module.exports = function createGalleryRouter(config) {
 
 		getInfoProxy(req, function(err, infoProxy) {
 			if (err) {
-				console.error(err);
+				return res.send({"err": err, "success": false});
 			}
 
 			checkProxy({
@@ -155,7 +163,7 @@ module.exports = function createGalleryRouter(config) {
 
 		request.get(url).end((err, response) => {
 			if (err) {
-				return res.send(err);
+				return res.send({"err": err, "success": false});
 			}
 
 			let data = {
@@ -182,16 +190,16 @@ module.exports = function createGalleryRouter(config) {
 			var ft = fileType(data.buffer);
 
 			if (!ft || !ft.mime) {
-				console.log("Gallery router: undefined mime type");
 				return res.send({
-					err: "Gallery router: undefined mime type"
+					err: "Gallery router: undefined mime type",
+					success: false
 				});
 			}
 
 			if (validMimeTypes.indexOf(ft.mime) === -1) {
-				console.log("Gallery router: Invalid mime type");
 				return res.send({
-					err: "Gallery router: Invalid mime type"
+					err: "Gallery router: Invalid mime type",
+					success: false
 				});
 			}
 		}
@@ -257,7 +265,6 @@ module.exports = function createGalleryRouter(config) {
 		var contentType = req.get("Content-Type");
 
 		if (contentType.toLowerCase().indexOf("application/json") > -1) {
-			console.log("FROMURL");
 			if (downloadImagesFromUrl) {
 				// if image should be downloaded
 				download({
@@ -278,7 +285,7 @@ module.exports = function createGalleryRouter(config) {
 
 				getInfoProxy(req, function(err, infoProxy) {
 					if (err) {
-						console.error(err);
+						return res.send({"err": err, "success": false});
 					}
 
 					checkProxy({
@@ -333,7 +340,7 @@ module.exports = function createGalleryRouter(config) {
 
 		getInfoProxy(req, function(err, infoProxy) {
 			if (err) {
-				console.error(err);
+				return res.send({"err": err, "success": false});
 			}
 
 			checkProxy({
@@ -373,7 +380,7 @@ module.exports = function createGalleryRouter(config) {
 
 		getInfoProxy(req, function(err, infoProxy) {
 			if (err) {
-				console.error(err);
+				return res.send({"err": err, "success": false});
 			}
 
 			checkProxy({
@@ -457,8 +464,11 @@ module.exports = function createGalleryRouter(config) {
 			}
 		], function (err, binId, binaryProxy) {
 			if (err) {
+				console.log("CALL BINARY DESTROYONE ERROR", err); 
 				return res.send({"err": err, "success": false});
 			}
+
+			console.log("CALL BINARY DESTROYONE");
 
 			binaryProxy.destroyOneById(
 				binId,

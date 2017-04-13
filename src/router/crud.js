@@ -16,8 +16,11 @@ module.exports = function createCRUDRouter(config) {
 
 	checkBelongsTo(config.belongsTo);
 
-	// var proxy = config.proxy;
 	var router = config.router || express.Router({mergeParams: true});
+
+	if (!(config.proxy || config.getProxy)) {
+		throw new Error("No proxy information supplied.");
+	}
 
 	var getProxy = config.getProxy || function(req, callback) {
 		callback(null, config.proxy);
@@ -46,7 +49,7 @@ module.exports = function createCRUDRouter(config) {
 
 		getProxy(req, function(err, proxy) {
 			if (err) {
-				console.error(err);
+				return res.send({"err": err, "success": false});
 			}
 
 			checkProxy({
@@ -78,7 +81,7 @@ module.exports = function createCRUDRouter(config) {
 	function post(req, res) {
 		getProxy(req, function(err, proxy) {
 			if (err) {
-				console.error(err);
+				return res.send({"err": err, "success": false});
 			}
 
 			checkProxy({
@@ -115,7 +118,7 @@ module.exports = function createCRUDRouter(config) {
 
 		getProxy(req, function(err, proxy) {
 			if (err) {
-				console.error(err);
+				return res.send({"err": err, "success": false});
 			}
 
 			checkProxy({
@@ -152,7 +155,7 @@ module.exports = function createCRUDRouter(config) {
 
 		getProxy(req, function(err, proxy) {
 			if (err) {
-				console.error(err);
+				return res.send({"err": err, "success": false});
 			}
 
 			checkProxy({
@@ -190,7 +193,7 @@ module.exports = function createCRUDRouter(config) {
 
 		getProxy(req, function(err, proxy) {
 			if (err) {
-				console.error(err);
+				return res.send({"err": err, "success": false});
 			}
 
 			checkProxy({
