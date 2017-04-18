@@ -66,12 +66,28 @@ module.exports = function createGalleryRouter(config) {
 
 	router.use(formidable.parse());
 
-	if (!(config.infoProxy || config.getInfoProxy)) {
-		throw new Error("No infoProxy information supplied.");
+	if (!config.infoProxy && !config.getInfoProxy) {
+		throw new Error(
+			"Neither infoProxy nor getInfoProxy function provided."
+		);
 	}
 
-	if (!(config.binaryProxy || config.getBinaryProxy)) {
-		throw new Error("No binaryProxy information supplied.");
+	if (!config.binaryProxy && !config.getBinaryProxy) {
+		throw new Error(
+			"Neither binaryProxy nor getBinaryProxy function provided."
+		);
+	}
+
+	if (config.getInfoProxy && typeof config.getInfoProxy !== "function") {
+		throw new Error(
+			"The provided getBinaryProxy is not a function."
+		);
+	}
+
+	if (config.getBinaryProxy && typeof config.getBinaryProxy !== "function") {
+		throw new Error(
+			"The provided getBinaryProxy is not a function."
+		);
 	}
 
 	var getInfoProxy = config.getInfoProxy || function(req, callback) {
@@ -464,11 +480,8 @@ module.exports = function createGalleryRouter(config) {
 			}
 		], function (err, binId, binaryProxy) {
 			if (err) {
-				console.log("CALL BINARY DESTROYONE ERROR", err); 
 				return res.send({"err": err, "success": false});
 			}
-
-			console.log("CALL BINARY DESTROYONE");
 
 			binaryProxy.destroyOneById(
 				binId,

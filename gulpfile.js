@@ -8,6 +8,7 @@ var jasmine = require("gulp-jasmine");
 var jsFiles = [
 	"./**/*.js",
 	"!node_modules/**/*",
+	"!coverage/**/*",
 	"!./**/*.built.js"
 ];
 
@@ -15,6 +16,7 @@ var jsonFiles = [
 	".jshintrc",
 	".jscsrc",
 	"!node_modules/**/*",
+	"!coverage/**/*",
 	"./**/*.json"
 ];
 

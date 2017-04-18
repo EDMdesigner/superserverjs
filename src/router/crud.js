@@ -18,8 +18,14 @@ module.exports = function createCRUDRouter(config) {
 
 	var router = config.router || express.Router({mergeParams: true});
 
-	if (!(config.proxy || config.getProxy)) {
-		throw new Error("No proxy information supplied.");
+	if (!config.proxy && !config.getProxy) {
+		throw new Error("Neither proxy nor getProxy function supplied.");
+	}
+
+	if (config.getProxy && typeof config.getProxy !== "function") {
+		throw new Error(
+			"The provided getProxy is not a function."
+		);
 	}
 
 	var getProxy = config.getProxy || function(req, callback) {
