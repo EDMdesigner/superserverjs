@@ -8,7 +8,8 @@ As its name suggests, you can create CRUD routes - or a REST endpoint for your a
 
 Param	| Type	| Required	| Default value	| Description
 ---		| ---	| ---		| ---			| ---
-proxy	| proxy | Yes		|				| A proxy object, which is responsible for storing the data. It can be a mongoProxy, a memoryProxy, a fileProxy, an s3Proxy, etc.
+proxy	| proxy | Yes (or getProxy)		|				| A proxy object, which is responsible for storing the data. It can be a mongoProxy, a memoryProxy, a fileProxy, an s3Proxy, etc.
+getProxy	| function | Yes (or proxy)			|				| A function, which is responsible for creating the proxy which will be used for the router. Its callback makes it possible to configure the proxy dynamically.
 preHooks	| object | No		|				| An object with functions named after the according HTTP requests (get, post, etc...), except getOne, which is get for a single document identified with its ID. The prehook will run before the query. You can also specify an array of middlewares in the prehook object.
 postHooks	| object | No		|				| An object with functions named after the according HTTP requests (get, post, etc...), except getOne, which is get for a single document identified with its ID. The posthook will run after the query.
 router	| express.Router | No | express.Router() | If you need to add middlewares to a router (eg. for authorization) you can pass a prepared router here. Otherwise a new router will be created and returned.
@@ -47,10 +48,12 @@ createInfoObject | function | Yes | | This function will be called when the bina
 calculateBinaryId | function | Yes | | This function will be called when you delete a resoure. The output of the infoProxy will be the input of this function and it should calculate the id in the binary proxy.
 fileUploadProp | string | Yes | | The router will search this prop in the request's payload when you upload a file.
 fromUrlProp | string | Yes | | The router will search the url on this prop. The resource from that url will be downloaded and then saved to the binary proxy.
-binaryProxy | superdata.proxy | Yes | | This is the proxy which is responsible to save the binary data somewhere. It can be a fileProxy or an s3 proxy, etc.
-infoProxy | superdata.proxy | Yes | | This proxy will save the info of the saved resource. Eg. original filename.
-
-
+binaryProxy | superdata.proxy | Yes (or getBinaryProxy) | | This is the proxy which is responsible to save the binary data somewhere. It can be a fileProxy or an s3 proxy, etc.
+getBinaryProxy	| function | Yes (or binaryProxy)			|				| A function, which is responsible for creating the binary proxy which will be used for the router. Its callback makes it possible to configure the proxy dynamically.
+infoProxy | superdata.proxy | Yes (or getInfoProxy) | | This proxy will save the info of the saved resource. Eg. original filename.
+getInfoProxy	| function | Yes (or infoProxy)			|				| A function, which is responsible for creating the info proxy which will be used for the router. Its callback makes it possible to configure the proxy dynamically.
+preHooks	| object | No		|				| An object with functions named after the according HTTP requests (get, post, etc...), except getOne, which is get for a single document identified with its ID. The prehook will run before the query. You can also specify an array of middlewares in the prehook object.
+postHooks	| object | No		|				| An object with functions named after the according HTTP requests (get, post, etc...), except getOne, which is get for a single document identified with its ID. The posthook will run after the query.
 
 ### Example
 
@@ -153,6 +156,62 @@ app.listen(port, function(err) {
 	console.log("Gallery server listening on port: ", port);
 });
 ```
+
+### Example for dynamic proxy configuration
+
+```
+createGalleryRouter({
+	createInfoObject: (data) => {
+		return {
+			title: data.file.name,
+			id: data.id,
+			createdAt: data.createdAt,
+			url: data.Location
+		};
+	},
+	calculateBinaryId: (data) => {
+		let url = data.url;
+		let binaryId = url.split("/");
+
+		binaryId = binaryId[binaryId.length - 1];
+		return binaryId;
+	},
+	validMimeTypes: ["image/jpeg", "image/png", "image/gif"],
+	fileUploadProp: "file",
+	fromUrlProp: "url",
+	preHooks: preHooks,
+	postHooks: postHooks,
+	infoProxy: mongoProxy,
+	getBinaryProxy: function(req, callback) {
+		if (req.params.APIkey in S3conf_cache) {
+			console.log("S3config found in cache!");
+			return callback(null, createS3Proxy(S3conf_cache[req.params.APIkey]));
+		}
+
+		S3configModel.findOne({
+			"APIkey": req.params.APIkey
+		}, (err, S3config) => {
+			if (err) {
+				return callback({
+					err: "Mongo error."
+				});
+			}
+
+			if (!S3config) {
+				return callback({
+					err: "S3 is not configured for APIkey: " + req.params.APIkey
+				});
+			}
+
+			S3conf_cache[req.params.APIkey] = S3config;
+
+			callback(null, createS3Proxy(S3config));
+		});
+	}
+});
+```
+
+
 
 
 ## fileProxy
