@@ -80,7 +80,7 @@ module.exports = function createGalleryRouter(config) {
 
 	if (config.getInfoProxy && typeof config.getInfoProxy !== "function") {
 		throw new Error(
-			"The provided getBinaryProxy is not a function."
+			"The provided getInfoProxy is not a function."
 		);
 	}
 

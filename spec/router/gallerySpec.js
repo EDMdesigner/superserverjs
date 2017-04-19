@@ -42,12 +42,73 @@ describe("Gallery router", function() {
 			}).toThrowError("config.fromUrlProp is mandatory");
 		});
 
+		it("no infoProxy", function() {
+			expect(function() {
+				createGalleryRouter({
+					createInfoObject: function() {},
+					calculateBinaryId: function() {},
+					fileUploadProp: "file",
+					fromUrlProp: "url"
+				});
+			}).toThrowError("Neither infoProxy nor getInfoProxy function provided.");
+		});
+
+		it("no binaryProxy", function() {
+			expect(function() {
+				createGalleryRouter({
+					createInfoObject: function() {},
+					calculateBinaryId: function() {},
+					fileUploadProp: "file",
+					fromUrlProp: "url",
+					infoProxy: "PROXY"
+				});
+			}).toThrowError("Neither binaryProxy nor getBinaryProxy function provided.");
+		});
+
+		it("no binaryProxy, getInfoProxy is function", function() {
+			expect(function() {
+				createGalleryRouter({
+					createInfoObject: function() {},
+					calculateBinaryId: function() {},
+					fileUploadProp: "file",
+					fromUrlProp: "url",
+					getInfoProxy: function() {}
+				});
+			}).toThrowError("Neither binaryProxy nor getBinaryProxy function provided.");
+		});
+
+		it("config.infoProxy not a function", function() {
+			expect(function() {
+				createGalleryRouter({
+					createInfoObject: function() {},
+					calculateBinaryId: function() {},
+					fileUploadProp: "file",
+					fromUrlProp: "url",
+					getInfoProxy: "NOT A FUNCTION",
+					getBinaryProxy: function() {}
+				});
+			}).toThrowError("The provided getInfoProxy is not a function.");
+		});
+
+		it("config.binaryProxy not a function", function() {
+			expect(function() {
+				createGalleryRouter({
+					createInfoObject: function() {},
+					calculateBinaryId: function() {},
+					fileUploadProp: "file",
+					fromUrlProp: "url",
+					getInfoProxy: function() {},
+					getBinaryProxy: "NOT A FUNCTION"
+				});
+			}).toThrowError("The provided getBinaryProxy is not a function.");
+		});
+
 		proxyConfigBehaviour({
 			config: {
 				createInfoObject: function() {},
 				calculateBinaryId: function() {},
 				fileUploadProp: "file",
-				fromUrlProp: "url"
+
 			},
 			factoryMethod: createGalleryRouter,
 			msgPrefix: "config.binaryProxy",

@@ -4,17 +4,28 @@ var bodyParser = require("body-parser");
 var request = require("supertest");
 
 var createCrudRouter = require("../../src/router/crud");
-
-var proxyConfigBehaviour = require("../proxy/proxyConfigBehaviour");
 var createMockProxy = require("../utils/createMockProxy");
 
 describe("crudRouter", function() {
 	describe("with invalid config", function() {
-		proxyConfigBehaviour({
-			config: {},
-			factoryMethod: createCrudRouter,
-			msgPrefix: "config.proxy",
-			prop: "proxy"
+		it("config.proxy", function() {
+			expect(createCrudRouter).toThrowError("Neither proxy nor getProxy function supplied.");
+		});
+
+		it("config.getProxy", function() {
+			expect(function() {
+				createCrudRouter({
+					proxy: "PROXY"
+				});
+			}).not.toThrowError();
+		});
+
+		it("config.getProxy", function() {
+			expect(function() {
+				createCrudRouter({
+					getProxy: "NOT A FUNCTION"
+				});
+			}).toThrowError("The provided getProxy is not a function.");
 		});
 	});
 
