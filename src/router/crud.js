@@ -14,16 +14,23 @@ module.exports = function createCRUDRouter(config) {
 	config = config || {};
 	config.preHooks = config.preHooks || {};
 
-	checkProxy({
-		proxy: config.proxy,
-		msgPrefix: "config.proxy"
-	});
-
 	checkBelongsTo(config.belongsTo);
 
-	var proxy = config.proxy;
 	var router = config.router || express.Router({mergeParams: true});
 
+	if (!config.proxy && !config.getProxy) {
+		throw new Error("Neither proxy nor getProxy function supplied.");
+	}
+
+	if (config.getProxy && typeof config.getProxy !== "function") {
+		throw new Error(
+			"The provided getProxy is not a function."
+		);
+	}
+
+	var getProxy = config.getProxy || function(req, callback) {
+		callback(null, config.proxy);
+	};
 
 	/*
 		 ██████  ███████ ████████
@@ -46,11 +53,22 @@ module.exports = function createCRUDRouter(config) {
 		query.skip = intify(query.skip, 0);
 		query.limit = intify(query.limit, 10);
 
-		proxy.read(
-			query,
-			req.filter,
-			createResponseHandlerWithHooks(config, req, res, "get")
-		);
+		getProxy(req, function(err, proxy) {
+			if (err) {
+				return res.send({"err": err, "success": false});
+			}
+
+			checkProxy({
+				proxy: proxy,
+				msgPrefix: "proxy"
+			});
+
+			proxy.read(
+				query,
+				req.filter,
+				createResponseHandlerWithHooks(config, req, res, "get")
+			);
+		});
 	}
 
 	let getParams = addPrehooksToParams(config, ["/"], "get");
@@ -67,11 +85,22 @@ module.exports = function createCRUDRouter(config) {
 	*/
 
 	function post(req, res) {
-		proxy.createOne(
-			req.body,
-			req.filter,
-			createResponseHandlerWithHooks(config, req, res, "post")
-		);
+		getProxy(req, function(err, proxy) {
+			if (err) {
+				return res.send({"err": err, "success": false});
+			}
+
+			checkProxy({
+				proxy: proxy,
+				msgPrefix: "proxy"
+			});
+
+			proxy.createOne(
+				req.body,
+				req.filter,
+				createResponseHandlerWithHooks(config, req, res, "post")
+			);
+		});
 	}
 
 	let postParams = addPrehooksToParams(config, ["/"], "post");
@@ -93,11 +122,22 @@ module.exports = function createCRUDRouter(config) {
 			delete req.filter.id;
 		}
 
-		proxy.readOneById(
-			req.params.id,
-			req.filter,
-			createResponseHandlerWithHooks(config, req, res, "getOne")
-		);
+		getProxy(req, function(err, proxy) {
+			if (err) {
+				return res.send({"err": err, "success": false});
+			}
+
+			checkProxy({
+				proxy: proxy,
+				msgPrefix: "proxy"
+			});
+
+			proxy.readOneById(
+				req.params.id,
+				req.filter,
+				createResponseHandlerWithHooks(config, req, res, "getOne")
+			);
+		});
 	}
 
 	let getOneParams = addPrehooksToParams(config, ["/:id"], "getOne");
@@ -119,12 +159,23 @@ module.exports = function createCRUDRouter(config) {
 			delete req.filter.id;
 		}
 
-		proxy.updateOneById(
-			req.params.id,
-			req.body,
-			req.filter,
-			createResponseHandlerWithHooks(config, req, res, "put")
-		);
+		getProxy(req, function(err, proxy) {
+			if (err) {
+				return res.send({"err": err, "success": false});
+			}
+
+			checkProxy({
+				proxy: proxy,
+				msgPrefix: "proxy"
+			});
+
+			proxy.updateOneById(
+				req.params.id,
+				req.body,
+				req.filter,
+				createResponseHandlerWithHooks(config, req, res, "put")
+			);
+		});
 	}
 
 	let putParams = addPrehooksToParams(config, ["/:id"], "put");
@@ -146,11 +197,22 @@ module.exports = function createCRUDRouter(config) {
 			delete req.filter.id;
 		}
 
-		proxy.destroyOneById(
-			req.params.id,
-			req.filter,
-			createResponseHandlerWithHooks(config, req, res, "delete")
-		);
+		getProxy(req, function(err, proxy) {
+			if (err) {
+				return res.send({"err": err, "success": false});
+			}
+
+			checkProxy({
+				proxy: proxy,
+				msgPrefix: "proxy"
+			});
+
+			proxy.destroyOneById(
+				req.params.id,
+				req.filter,
+				createResponseHandlerWithHooks(config, req, res, "delete")
+			);
+		});
 	}
 
 	let deleteParams = addPrehooksToParams(config, ["/:id"], "delete");

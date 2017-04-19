@@ -4,17 +4,28 @@ var bodyParser = require("body-parser");
 var request = require("supertest");
 
 var createCrudRouter = require("../../src/router/crud");
-
-var proxyConfigBehaviour = require("../proxy/proxyConfigBehaviour");
 var createMockProxy = require("../utils/createMockProxy");
 
 describe("crudRouter", function() {
 	describe("with invalid config", function() {
-		proxyConfigBehaviour({
-			config: {},
-			factoryMethod: createCrudRouter,
-			msgPrefix: "config.proxy",
-			prop: "proxy"
+		it("config.proxy", function() {
+			expect(createCrudRouter).toThrowError("Neither proxy nor getProxy function supplied.");
+		});
+
+		it("config.getProxy", function() {
+			expect(function() {
+				createCrudRouter({
+					proxy: "PROXY"
+				});
+			}).not.toThrowError();
+		});
+
+		it("config.getProxy", function() {
+			expect(function() {
+				createCrudRouter({
+					getProxy: "NOT A FUNCTION"
+				});
+			}).toThrowError("The provided getProxy is not a function.");
 		});
 	});
 
@@ -48,7 +59,7 @@ describe("crudRouter", function() {
 
 			var app = null;
 
-			beforeAll(function() {				
+			beforeAll(function() {
 				spyOn(mockProxy, "read").and.callThrough();
 				spyOn(mockProxy, "createOne").and.callThrough();
 				spyOn(mockProxy, "readOneById").and.callThrough();
@@ -188,7 +199,7 @@ describe("crudRouter", function() {
 				post: 	function() {},
 				put: 	function() {},
 				delete: function() {}
-			};			
+			};
 
 			beforeAll(function() {
 				testHooks = {
@@ -198,7 +209,7 @@ describe("crudRouter", function() {
 					put: 	function (req, res, next) { next(); },
 					delete: function (req, res, next) { next(); }
 				};
-				
+
 				spyOn(testHooks, "get").and.callThrough();
 				spyOn(testHooks, "getOne").and.callThrough();
 				spyOn(testHooks, "post").and.callThrough();
@@ -350,7 +361,7 @@ describe("crudRouter", function() {
 
 			beforeAll(function() {
 				mockProxy = createMockProxy();
-				
+
 				app = express();
 				app.use(bodyParser.urlencoded({limit: "2mb", extended: true, parameterLimit: 10000}));
 				app.use(bodyParser.json({limit: "2mb"}));
