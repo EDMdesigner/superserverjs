@@ -159,7 +159,7 @@ app.listen(port, function(err) {
 
 ### Example for dynamic proxy configuration
 
-```
+```javascript
 createGalleryRouter({
 	createInfoObject: (data) => {
 		return {
