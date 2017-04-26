@@ -294,6 +294,7 @@ accessKeyId | string | Yes | | your S3 access key
 secretAccessKey | string | Yes | | your S3 secret access key
 region | string | Yes | | AWS region name that your bucket belongs to
 bucket | string | Yes | | name of your S3 bucket
+getBinaryDirNameFromFilter(filter) | function | No | | Set S3 prefix from filter (req.params) data. Once set, all your S3 queries will be prefixed with the return value of the function.
 
 ### Example
 
@@ -305,5 +306,13 @@ var proxy = createS3Proxy({
 	secretAccessKey: "your S3 secret access key",
 	region: "AWS region name that your bucket belongs to",
 	bucket: "name of your bucket"
+	// optional prefix setter 
+	getBinaryDirNameFromFilter: function(filter) {
+		if (!filter || !filter.belongsTo) {
+			throw new Error("filter must contain a belongsTo property!");
+		}
+
+		return filter.belongsTo;
+	}
 });
 ```
