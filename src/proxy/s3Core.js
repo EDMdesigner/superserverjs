@@ -50,6 +50,8 @@ module.exports = function(dependencies) {
 			}
 		});
 
+		var getBinaryDirNameFromFilter = config.getBinaryDirNameFromFilter;
+
 		function read(query, filter, callback) {
 			if (typeof callback === "undefined") {
 				callback = filter;
@@ -58,9 +60,9 @@ module.exports = function(dependencies) {
 
 			var params = {};
 
-			if (filter) {
+			if (getBinaryDirNameFromFilter) {
 				params = {
-					Prefix: filter.belongsTo
+					Prefix: getBinaryDirNameFromFilter(filter)
 				};
 			}
 
@@ -84,8 +86,8 @@ module.exports = function(dependencies) {
 
 			var myKey = generateId(data);
 
-			if (filter) {
-				myKey = filter.belongsTo + "/" + generateId(data);
+			if (getBinaryDirNameFromFilter) {
+				myKey = getBinaryDirNameFromFilter(filter) + "/" + generateId(data);
 			}
 
 			var params = {
@@ -112,8 +114,8 @@ module.exports = function(dependencies) {
 
 			var myKey = id;
 
-			if (filter) {
-				myKey = filter.belongsTo + "/" + id;
+			if (getBinaryDirNameFromFilter) {
+				myKey = getBinaryDirNameFromFilter(filter) + "/" + id;
 			}
 
 			var params = {
@@ -137,8 +139,8 @@ module.exports = function(dependencies) {
 
 			var myKey = id;
 
-			if (filter) {
-				myKey = filter.belongsTo + "/" + id;
+			if (getBinaryDirNameFromFilter) {
+				myKey = getBinaryDirNameFromFilter(filter) + "/" + id;
 			}
 
 			var params = {
@@ -164,8 +166,8 @@ module.exports = function(dependencies) {
 
 			var myKey = id;
 
-			if (filter) {
-				myKey = filter.belongsTo + "/" + id;
+			if (getBinaryDirNameFromFilter) {
+				myKey = getBinaryDirNameFromFilter(filter) + "/" + id;
 			}
 
 			var params = {
