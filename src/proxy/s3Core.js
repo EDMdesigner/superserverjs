@@ -1,4 +1,4 @@
-/* 
+/*
  * AWS S3 proxy core
  */
 
@@ -6,15 +6,15 @@ module.exports = function(dependencies) {
 	if (!dependencies.AWS) {
 		throw new Error("AWS dependency is mandatory!");
 	}
-	
+
 	if (!dependencies.generateId) {
 		throw new Error("generateId dependency is mandatory!");
 	}
-	
+
 	if (!dependencies.fileType) {
 		throw new Error("fileType module dependency is mandatory!");
 	}
-	
+
 	return function createS3Proxy(config) {
 		config = config || {};
 
@@ -50,13 +50,23 @@ module.exports = function(dependencies) {
 			}
 		});
 
+		var getBinaryDirNameFromFilter = config.getBinaryDirNameFromFilter;
+
 		function read(query, filter, callback) {
 			if (typeof callback === "undefined") {
 				callback = filter;
 				filter = null;
 			}
 
-			s3.listObjects({}, function(err, data) {
+			var params = {};
+
+			if (getBinaryDirNameFromFilter) {
+				params = {
+					Prefix: getBinaryDirNameFromFilter(filter)
+				};
+			}
+
+			s3.listObjects(params, function(err, data) {
 				if (err) {
 					return callback(err);
 				}
@@ -74,8 +84,14 @@ module.exports = function(dependencies) {
 				filter = null;
 			}
 
+			var myKey = generateId(data);
+
+			if (getBinaryDirNameFromFilter) {
+				myKey = getBinaryDirNameFromFilter(filter) + "/" + generateId(data);
+			}
+
 			var params = {
-				Key: generateId(data),
+				Key: myKey,
 				Body: data,
 				ACL: "public-read",
 				ContentType: fileType(data).mime
@@ -96,8 +112,14 @@ module.exports = function(dependencies) {
 				filter = null;
 			}
 
+			var myKey = id;
+
+			if (getBinaryDirNameFromFilter) {
+				myKey = getBinaryDirNameFromFilter(filter) + "/" + id;
+			}
+
 			var params = {
-				Key: id
+				Key: myKey
 			};
 
 			s3.getObject(params, function(err, data) {
@@ -115,8 +137,14 @@ module.exports = function(dependencies) {
 				filter = null;
 			}
 
+			var myKey = id;
+
+			if (getBinaryDirNameFromFilter) {
+				myKey = getBinaryDirNameFromFilter(filter) + "/" + id;
+			}
+
 			var params = {
-				Key: id,
+				Key: myKey,
 				Body: newData,
 				ACL: "public-read"
 			};
@@ -135,9 +163,15 @@ module.exports = function(dependencies) {
 				callback = filter;
 				filter = null;
 			}
-			
+
+			var myKey = id;
+
+			if (getBinaryDirNameFromFilter) {
+				myKey = getBinaryDirNameFromFilter(filter) + "/" + id;
+			}
+
 			var params = {
-				Key: id
+				Key: myKey
 			};
 
 			s3.deleteObject(params, function(err, data) {
