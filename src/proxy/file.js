@@ -14,6 +14,7 @@ module.exports = function createFileProxy(config) {
 
 	var idProperty = config.idProperty;
 	var basePath = config.basePath;
+	var localUrlPrefix = config.localUrlPrefix;
 	var encoding = config.encoding;
 
 	fs.mkdir(basePath, function() {
@@ -59,6 +60,7 @@ module.exports = function createFileProxy(config) {
 		fs.writeFile(basePath + id, data, encoding, function(err) {
 			var retObj = {};
 			retObj[idProperty] = id;
+			retObj["Location"] = localUrlPrefix + id;
 			callback(err, retObj);
 		});
 	}
