@@ -60,7 +60,7 @@ module.exports = function createFileProxy(config) {
 		fs.writeFile(basePath + id, data, encoding, function(err) {
 			var retObj = {};
 			retObj[idProperty] = id;
-			retObj["Location"] = localUrlPrefix + id;
+			retObj.Location = localUrlPrefix + id;
 			callback(err, retObj);
 		});
 	}
