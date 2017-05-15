@@ -1,5 +1,6 @@
 var fs = require("fs");
 var idGenerator = require("../utils/generateId");
+var path = require("path");
 
 module.exports = function createFileProxy(config) {
 	config = config || {};
@@ -13,7 +14,7 @@ module.exports = function createFileProxy(config) {
 	}
 
 	var idProperty = config.idProperty;
-	var basePath = config.basePath;
+	var basePath = path.join(__dirname + config.basePath);
 	var localUrlPrefix = config.localUrlPrefix;
 	var encoding = config.encoding;
 
