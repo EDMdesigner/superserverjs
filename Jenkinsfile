@@ -15,7 +15,7 @@ pipeline {
 				sh 'npm test'
 			}
 		}
-		stage('NPM publish') {
+		stage('NPM publish [master]') {
 			when {
 				branch "master"
 			}
@@ -23,6 +23,18 @@ pipeline {
 				withCredentials([string(credentialsId: 'edmdesigner-bot', variable: 'NPM_AUTH_TOKEN')]) {
 					sh 'npm set init.author.email "info@edmdesigner.com"'
 					sh 'echo "//registry.npmjs.org/:_authToken=$NPM_AUTH_TOKEN" > ~/.npmrc'
+					sh 'npm publish'
+				}
+			}
+		}
+		stage('NPM publish [staging]') {
+			when {
+				branch "staging"
+			}
+			steps {
+				withCredentials([string(credentialsId: 'edmdesigner-bot-private', variable: 'NPM_AUTH_TOKEN')]) {
+					sh 'echo "registry=http://npm.edmdesigner.com/" > ~/.npmrc'
+                    sh 'echo "//npm.edmdesigner.com/:_authToken=$NPM_AUTH_TOKEN" >> ~/.npmrc'
 					sh 'npm publish'
 				}
 			}
