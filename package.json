@@ -1,6 +1,6 @@
 {
   "name": "superserverjs",
-  "version": "0.0.15",
+  "version": "0.0.16",
   "description": "Superdata motivated server side modules. (Proxies & routers.)",
   "main": "src/main.js",
   "scripts": {
@@ -34,18 +34,10 @@
   "homepage": "https://github.com/EDMdesigner/superserverjs#readme",
   "devDependencies": {
     "body-parser": "^1.15.0",
+    "edm-supergulp": "latest",
     "express-formidable": "^0.1.2",
     "form-data": "^1.0.0-rc4",
     "gulp": "^3.9.1",
-    "gulp-jasmine": "^2.3.0",
-    "gulp-jscs": "^3.0.2",
-    "gulp-jscs-stylish": "^1.3.0",
-    "gulp-jshint": "^2.0.0",
-    "gulp-jsonlint": "^1.1.2",
-    "jasmine": "^2.4.1",
-    "jasmine-debug": "^0.1.1",
-    "jshint": "^2.9.1",
-    "jshint-stylish": "^2.1.0",
     "supertest": "^1.2.0"
   },
   "dependencies": {
@@ -58,6 +50,6 @@
     "extend": "^3.0.0",
     "file-type": "^3.8.0",
     "mongoose": "4.4.12",
-	"superagent": "^1.8.3"
+    "superagent": "^1.8.3"
   }
 }
