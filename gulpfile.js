@@ -1,67 +1,41 @@
 var gulp = require("gulp");
-var jscs = require("gulp-jscs");
-var jshint = require("gulp-jshint");
-var stylish = require("gulp-jscs-stylish");
-var jsonlint = require("gulp-jsonlint");
-var jasmine = require("gulp-jasmine");
+var createSuperGulp = require("edm-supergulp");
+
+var superGulp = createSuperGulp({
+	gulp: gulp
+});
+
+var packageJson = require("./package.json");
 
 var jsFiles = [
-	"./**/*.js",
-	"!node_modules/**/*",
-	"!coverage/**/*",
-	"!./**/*.built.js"
+	"./*.js",
+	"./src/**/*.js",
+	"./spec/**/*.js"
 ];
 
 var jsonFiles = [
 	".jshintrc",
 	".jscsrc",
-	"!node_modules/**/*",
-	"!coverage/**/*",
-	"./**/*.json"
+	"./package.json",
+	"./src/**/*.json",
+	"./spec/**/*.json"
 ];
 
-// JSON lint
-// ==================================================
-gulp.task("jsonlint", function() {
-	return gulp.src(jsonFiles)
-		.pipe(jsonlint())
-		.pipe(jsonlint.failOnError());
+var specFiles = [
+	"spec/**/*Spec.js"
+];
+
+var sourceFiles = [
+	"src/**/*.js"
+];
+
+superGulp.taskTemplates.initBackendTasks({
+	packageJson: packageJson,
+	coverage: 60,
+	files: {
+		js: jsFiles,
+		json: jsonFiles,
+		spec: specFiles,
+		source: sourceFiles
+	}
 });
-
-
-// JS Hint
-// ==================================================
-gulp.task("jshint", function() {
-	return gulp.src(jsFiles)
-		.pipe(jshint(".jshintrc"))
-		.pipe(jshint.reporter("jshint-stylish"))
-		.pipe(jshint.reporter("fail"));
-});
-
-
-// JS CodeStyle
-// ==================================================
-gulp.task("jscs", function() {
-	return gulp.src(jsFiles)
-		.pipe(jscs({
-			configPath: ".jscsrc",
-			fix: true
-		}))
-		.pipe(stylish())
-		.pipe(jscs.reporter("fail"));
-});
-
-
-// Jasmine
-// ==================================================
-gulp.task("jasmine", function() {
-	return gulp.src([
-		"spec/**/*.js"
-	])
-	.pipe(jasmine({
-		verbose: false
-	}));
-});
-
-
-gulp.task("test", ["jsonlint", "jshint", "jscs", "jasmine"]);
