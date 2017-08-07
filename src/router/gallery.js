@@ -112,26 +112,6 @@ module.exports = function createGalleryRouter(config) {
 		query.find = objectify(query.find);
 		query.sort = objectify(query.sort);
 
-		let keys = Object.keys(query.find);
-
-		if (keys.length > 0) {
-			let key = keys[0];
-
-			if (typeof query.find[key] === "string") {
-				try	{
-					let findSplit = query.find[key].split("/");
-					let rgxOptions = findSplit[findSplit.length - 1];
-
-					findSplit.pop();
-					findSplit.shift();
-					let rgxPattern = findSplit.join("/");
-
-					query.find[key] = new RegExp(rgxPattern, rgxOptions);
-				} catch (e) {
-				}
-			}
-		}
-
 		query.skip = intify(query.skip, 0);
 		query.limit = intify(query.limit, 10);
 
@@ -224,6 +204,7 @@ module.exports = function createGalleryRouter(config) {
 			function(callback) {
 				getBinaryProxy(req, function(err, binaryProxy) {
 					if (err) {
+						console.log("Upload is failed! Error when getting binaryProxy: ", err);
 						return callback(err);
 					}
 
@@ -241,6 +222,7 @@ module.exports = function createGalleryRouter(config) {
 					req.filter,
 					function(err, response) {
 						if (err) {
+							console.log("Upload is failed! Error when creating the item in the binaryProxy: ", err);
 							return callback(err);
 						}
 
@@ -251,6 +233,7 @@ module.exports = function createGalleryRouter(config) {
 			function(response, callback) {
 				getInfoProxy(req, function(err, infoProxy) {
 					if (err) {
+						console.log("Upload is failed! Error when getting infoProxy: ", err);
 						return callback(err);
 					}
 
