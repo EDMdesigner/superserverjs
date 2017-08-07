@@ -6,8 +6,10 @@ pipeline {
 	}
 	stages {
 		stage('build') {
-			withNPM(npmrcConfig:'npmrc-private') {
-				sh 'npm install'
+			steps {
+				withNPM(npmrcConfig:'npmrc-private') {
+					sh 'npm install'
+				}
 			}
 		}
 		stage('test') {
