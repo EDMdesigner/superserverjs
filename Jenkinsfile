@@ -6,13 +6,15 @@ pipeline {
 	}
 	stages {
 		stage('build') {
-			steps {
+			withNPM(npmrcConfig:'npmrc-private') {
 				sh 'npm install'
 			}
 		}
 		stage('test') {
 			steps {
-				sh 'npm test'
+				ansiColor('gnome-terminal') {
+					sh 'npm test'
+				}
 			}
 		}
 		stage('NPM publish [master]') {
@@ -20,9 +22,7 @@ pipeline {
 				branch "master"
 			}
 			steps {
-				withCredentials([string(credentialsId: 'edmdesigner-bot', variable: 'NPM_AUTH_TOKEN')]) {
-					sh 'npm set init.author.email "info@edmdesigner.com"'
-					sh 'echo "//registry.npmjs.org/:_authToken=$NPM_AUTH_TOKEN" > ~/.npmrc'
+				withNPM(npmrcConfig:'npmrc-global') {
 					sh 'npm publish'
 				}
 			}
@@ -32,9 +32,7 @@ pipeline {
 				branch "staging"
 			}
 			steps {
-				withCredentials([string(credentialsId: 'edmdesigner-bot-private', variable: 'NPM_AUTH_TOKEN')]) {
-					sh 'echo "registry=http://npm.edmdesigner.com/" > ~/.npmrc'
-                    sh 'echo "//npm.edmdesigner.com/:_authToken=$NPM_AUTH_TOKEN" >> ~/.npmrc'
+				withNPM(npmrcConfig:'npmrc-private') {
 					sh 'npm publish'
 				}
 			}
