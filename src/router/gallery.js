@@ -224,7 +224,7 @@ module.exports = function createGalleryRouter(config) {
 			function(callback) {
 				getBinaryProxy(req, function(err, binaryProxy) {
 					if (err) {
-						console.log("Upload is failed! Error when getting binaryProxy: " + err);
+						console.log("Upload is failed! Error when getting binaryProxy: ", err);
 						return callback(err);
 					}
 
@@ -242,7 +242,7 @@ module.exports = function createGalleryRouter(config) {
 					req.filter,
 					function(err, response) {
 						if (err) {
-							console.log("Upload is failed! Error when creating the item in the binaryProxy: " + err);
+							console.log("Upload is failed! Error when creating the item in the binaryProxy: ", err);
 							return callback(err);
 						}
 
@@ -253,7 +253,7 @@ module.exports = function createGalleryRouter(config) {
 			function(response, callback) {
 				getInfoProxy(req, function(err, infoProxy) {
 					if (err) {
-						console.log("Upload is failed! Error when getting infoProxy: " + err);
+						console.log("Upload is failed! Error when getting infoProxy: ", err);
 						return callback(err);
 					}
 
