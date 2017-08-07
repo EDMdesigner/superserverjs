@@ -50,6 +50,26 @@ module.exports = function createCRUDRouter(config) {
 		query.find = objectify(query.find);
 		query.sort = objectify(query.sort);
 
+		let keys = Object.keys(query.find);
+
+		if (keys.length > 0) {
+			let key = keys[0];
+
+			if (typeof query.find[key] === "string") {
+				try	{
+					let findSplit = query.find[key].split("/");
+					let rgxOptions = findSplit[findSplit.length - 1];
+
+					findSplit.pop();
+					findSplit.shift();
+					let rgxPattern = findSplit.join("/");
+
+					query.find[key] = new RegExp(rgxPattern, rgxOptions);
+				} catch (e) {
+				}
+			}
+		}
+
 		query.skip = intify(query.skip, 0);
 		query.limit = intify(query.limit, 10);
 
