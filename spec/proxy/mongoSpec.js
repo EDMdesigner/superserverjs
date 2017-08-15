@@ -218,6 +218,22 @@ describe("Mongo proxy", function() {
 					},
 
 					findOne: function(id, callback) {
+						if(!callback) {
+							return {
+								populate: (path) => {
+									return {
+										exec: (callback) => {
+											callback(null, {
+												toObject: () => {
+													return {};
+												}
+											});
+										}
+									};
+								}
+							};
+						}
+
 						callback(null, {});
 					},
 
@@ -229,7 +245,7 @@ describe("Mongo proxy", function() {
 						callback(null);
 					},
 					populate: (path) => {
-						return this;
+						return mockModel;
 					}
 				};
 
