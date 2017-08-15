@@ -196,6 +196,65 @@ describe("Mongo proxy", function() {
 			});
 		});
 
+		describe("populate tests", () => {
+			let mongoProxy, mockModel;
+
+			beforeEach((done) => {
+				mockModel = {
+					find: function() {
+						return mockModel;
+					},
+
+					exec: function(callback) {
+						callback(null, []);
+					},
+
+					count: function(query, callback) {
+						callback(null, 0);
+					},
+
+					create: function(data, callback) {
+						callback(null);
+					},
+
+					findOne: function(id, callback) {
+						callback(null, {});
+					},
+
+					findOneAndUpdate: function(id, data, callback) {
+						callback(null);
+					},
+
+					findOneAndRemove: function(id, callback) {
+						callback(null);
+					},
+					populate: (path) => {
+						return this;
+					}
+				};
+
+				spyOn(mockModel, "populate").and.callThrough();
+
+				mongoProxy = createMongoProxy({
+					model: mockModel,
+					populate: {
+						by: "id",
+						setProp: "prop"
+					}
+				});
+
+				done();
+			});
+
+
+			it("readOne should call populate", (done) => {
+				mongoProxy.readOneById({}, {user: "User1"}, (err, result) => {
+					expect(mockModel.populate).toHaveBeenCalledWith("id");
+				});
+
+				done();
+			});
+		});
 	});
 
 });
