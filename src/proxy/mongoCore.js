@@ -71,7 +71,27 @@ module.exports = function(dependencies) {
 				model = model.limit(query.limit);
 			}
 
+			if(config.populate) {
+				model = model.populate(config.populate.by);
+			}
+
 			model.exec(function(err, result) {
+				if(config.populate) {
+					for(let idx = 0; idx < result.length; idx += 1) {
+						result[idx] = result[idx].toObject();
+
+						result[idx][config.populate.setProp] = {};
+						
+						for(let key in result[idx][config.populate.by]) {
+							if(key !== "_id"){
+								result[idx][config.populate.setProp][key] = result[idx][config.populate.by][key];
+							}
+						}
+
+						result[idx][config.populate.by] = result[idx][config.populate.by]._id;
+					}
+				}
+				
 				done(err, result);
 			});
 		}
@@ -109,6 +129,23 @@ module.exports = function(dependencies) {
 
 			if (filter) {
 				extend(find, filter);	
+			}
+
+			if(config.populate) {
+				Model.findOne(find).populate(config.populate.by).exec((err, result) => {
+					result = result.toObject();
+					result[config.populate.setProp] = {};
+
+					for(let key in result[config.populate.by]) {
+						if(key !== "_id"){
+							result[config.populate.setProp][key] = result[config.populate.by][key];
+						}
+					}
+
+					result[config.populate.by] = result[config.populate.by]._id;
+				});
+
+				return;
 			}
 
 			Model.findOne(find, function(err, result) {
