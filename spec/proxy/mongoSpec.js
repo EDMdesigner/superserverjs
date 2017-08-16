@@ -1,3 +1,5 @@
+"use strict";
+
 var createMongoProxyCore = require("../../src/proxy/mongoCore");
 
 var mockAsync = {
@@ -208,7 +210,7 @@ describe("Mongo proxy", function() {
 					exec: function(callback) {
 						callback(null, {
 							toObject: () => {
-								return {}
+								return {};
 							}
 						});
 					},
@@ -242,7 +244,7 @@ describe("Mongo proxy", function() {
 				createMongoProxy = createMongoProxyCore({
 					extend: mockExtend,
 					async: mockAsync
-				})
+				});
 
 				mongoProxy = createMongoProxy({
 					model: mockModel,
@@ -295,7 +297,7 @@ describe("Mongo proxy", function() {
 							});
 						}
 					}
-				})
+				});
 
 				mongoProxy = createMongoProxy({
 					model: mockModel,
