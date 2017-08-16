@@ -1,3 +1,5 @@
+"use strict";
+
 var createMongoProxyCore = require("../../src/proxy/mongoCore");
 
 var mockAsync = {
@@ -208,7 +210,7 @@ describe("Mongo proxy", function() {
 					exec: function(callback) {
 						callback(null, {
 							toObject: () => {
-								return {}
+								return {};
 							}
 						});
 					},
@@ -221,7 +223,7 @@ describe("Mongo proxy", function() {
 						callback(null);
 					},
 
-					findOne: function(id) {
+					findOne: function() {
 						return mockModel;
 					},
 
@@ -232,7 +234,7 @@ describe("Mongo proxy", function() {
 					findOneAndRemove: function(id, callback) {
 						callback(null);
 					},
-					populate: (path) => {
+					populate: () => {
 						return mockModel;
 					}
 				};
@@ -242,7 +244,7 @@ describe("Mongo proxy", function() {
 				createMongoProxy = createMongoProxyCore({
 					extend: mockExtend,
 					async: mockAsync
-				})
+				});
 
 				mongoProxy = createMongoProxy({
 					model: mockModel,
@@ -254,6 +256,8 @@ describe("Mongo proxy", function() {
 				
 				mongoProxy.readOneById({}, {user: "User1"}, (err, result) => {
 					expect(mockModel.populate).toHaveBeenCalledWith("id");
+					expect(typeof result).toBe("object");
+					expect(err).toBe(null);
 				});
 
 				done();
@@ -261,19 +265,19 @@ describe("Mongo proxy", function() {
 
 			it("read should call populate if popoulate exists in config", (done) => {
 				mockModel = {
-					find: (query) => {
+					find: () => {
 						return mockModel;
 					},
-					sort: (query) => {
+					sort: () => {
 						return mockModel;
 					},
-					skip: (query) => {
+					skip: () => {
 						return mockModel;
 					},
-					limit: (query) => {
+					limit: () => {
 						return mockModel;
 					},
-					populate: (path) => {
+					populate: () => {
 						return mockModel;
 					},
 					exec: (callback) => {
@@ -295,7 +299,7 @@ describe("Mongo proxy", function() {
 							});
 						}
 					}
-				})
+				});
 
 				mongoProxy = createMongoProxy({
 					model: mockModel,
@@ -307,6 +311,8 @@ describe("Mongo proxy", function() {
 
 				mongoProxy.read({}, {user: "User1"}, (err, result) => {
 					expect(mockModel.populate).toHaveBeenCalledWith("id");
+					expect(Array.isArray(result)).toBe(true);
+					expect(err).toBe(null);
 				});
 
 				done();
