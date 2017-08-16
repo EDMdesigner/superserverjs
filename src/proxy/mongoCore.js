@@ -1,3 +1,4 @@
+"use strict";
 /* 
  * MongoDB proxy core
  */
