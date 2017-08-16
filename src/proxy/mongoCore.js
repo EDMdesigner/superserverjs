@@ -133,19 +133,20 @@ module.exports = function(dependencies) {
 
 			if(config.populate) {
 				Model.findOne(find).populate(config.populate.by).exec((err, result) => {
-					result = result.toObject();
-					result[config.populate.setProp] = {};
+					if(!(Object.keys(result).length === 1 && result.toObject)) {
+						result = result.toObject();
+						result[config.populate.setProp] = {};
 
-					for(let key in result[config.populate.by]) {
-						if(key !== "_id"){
-							result[config.populate.setProp][key] = result[config.populate.by][key];
+						for(let key in result[config.populate.by]) {
+							if(key !== "_id"){
+								result[config.populate.setProp][key] = result[config.populate.by][key];
+							}
 						}
+						
+						result[config.populate.by] = result[config.populate.by]._id;
 					}
-
-					result[config.populate.by] = result[config.populate.by]._id;
+					return callback(err, result);
 				});
-
-				return;
 			}
 
 			Model.findOne(find, function(err, result) {

@@ -197,16 +197,20 @@ describe("Mongo proxy", function() {
 		});
 
 		describe("populate tests", () => {
-			let mongoProxy, mockModel;
+			let mongoProxy, createMongoProxy, mockModel;
 
-			beforeEach((done) => {
-				mockModel = {
+			it("readOne should call populate if populate exists in config", (done) => {
+				let mockModel = {
 					find: function() {
 						return mockModel;
 					},
 
 					exec: function(callback) {
-						callback(null, []);
+						callback(null, {
+							toObject: () => {
+								return {}
+							}
+						});
 					},
 
 					count: function(query, callback) {
@@ -217,24 +221,8 @@ describe("Mongo proxy", function() {
 						callback(null);
 					},
 
-					findOne: function(id, callback) {
-						if(!callback) {
-							return {
-								populate: (path) => {
-									return {
-										exec: (callback) => {
-											callback(null, {
-												toObject: () => {
-													return {};
-												}
-											});
-										}
-									};
-								}
-							};
-						}
-
-						callback(null, {});
+					findOne: function(id) {
+						return mockModel;
 					},
 
 					findOneAndUpdate: function(id, data, callback) {
@@ -251,6 +239,64 @@ describe("Mongo proxy", function() {
 
 				spyOn(mockModel, "populate").and.callThrough();
 
+				createMongoProxy = createMongoProxyCore({
+					extend: mockExtend,
+					async: mockAsync
+				})
+
+				mongoProxy = createMongoProxy({
+					model: mockModel,
+					populate: {
+						by: "id",
+						setProp: "prop"
+					}
+				});
+				
+				mongoProxy.readOneById({}, {user: "User1"}, (err, result) => {
+					expect(mockModel.populate).toHaveBeenCalledWith("id");
+				});
+
+				done();
+			});
+
+			it("read should call populate if popoulate exists in config", (done) => {
+				mockModel = {
+					find: (query) => {
+						return mockModel;
+					},
+					sort: (query) => {
+						return mockModel;
+					},
+					skip: (query) => {
+						return mockModel;
+					},
+					limit: (query) => {
+						return mockModel;
+					},
+					populate: (path) => {
+						return mockModel;
+					},
+					exec: (callback) => {
+						callback(null, []);
+					},
+					count: function(query, callback) {
+						callback(null, 0);
+					}
+				};
+
+				spyOn(mockModel, "populate").and.callThrough();
+
+				createMongoProxy = createMongoProxyCore({
+					extend: mockExtend,
+					async: {
+						parallel: (functions) => {
+							Object.keys(functions).forEach((func) => {
+								functions[func](done);
+							});
+						}
+					}
+				})
+
 				mongoProxy = createMongoProxy({
 					model: mockModel,
 					populate: {
@@ -259,12 +305,7 @@ describe("Mongo proxy", function() {
 					}
 				});
 
-				done();
-			});
-
-
-			it("readOne should call populate", (done) => {
-				mongoProxy.readOneById({}, {user: "User1"}, (err, result) => {
+				mongoProxy.read({}, {user: "User1"}, (err, result) => {
 					expect(mockModel.populate).toHaveBeenCalledWith("id");
 				});
 
