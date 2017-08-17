@@ -183,6 +183,42 @@ module.exports = function createCRUDRouter(config) {
 	router.put.apply(router, putParams);
 
 
+
+	/*
+		Patch
+	*/
+
+	function patch(req, res) {
+		// avoid accidentally apply id to the filter from preHooks
+		if (req.filter && req.filter.id) {
+			delete req.filter.id;
+		}
+
+		getProxy(req, function(err, proxy) {
+			if (err) {
+				return res.send({"err": err, "success": false});
+			}
+
+			checkProxy({
+				proxy: proxy,
+				msgPrefix: "proxy"
+			});
+
+			proxy.updateOneById(
+				req.params.id,
+				req.body,
+				req.filter,
+				createResponseHandlerWithHooks(config, req, res, "patch")
+			);
+		});
+	}
+
+	let patchParams = addPrehooksToParams(config, ["/:id"], "patch");
+	patchParams.push(patch);
+	router.patch.apply(router, patchParams);
+
+
+
 	/*
 		██████  ███████ ██      ███████ ████████ ███████
 		██   ██ ██      ██      ██         ██    ██

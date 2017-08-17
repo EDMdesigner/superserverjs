@@ -96,7 +96,7 @@ module.exports = function(dependencies) {
 				callback(err, result);
 			});
 		}
-
+ 
 		function readOneById(id, filter, callback) {
 			if (typeof callback === "undefined") {
 				callback = filter;
@@ -131,10 +131,31 @@ module.exports = function(dependencies) {
 				extend(find, filter);	
 			}
 
-			Model.findOneAndUpdate(find, newData, function(err, result) {
+			Model.findOneAndUpdate(find, newData, {new: true}, function(err, result) {
 				callback(err, result);
 			});
 		}
+
+
+		function patchOneById(id, newData, filter, callback) {
+			if (typeof callback === "undefined") {
+				callback = filter;
+				filter = null;
+			}
+
+			var find = {
+				_id: id
+			};
+
+			if (filter) {
+				extend(find, filter);	
+			}
+
+			Model.findOneAndUpdate(find, newData, {new: true}, function(err, result) {
+				callback(err, result);
+			});
+		}
+
 
 		function destroyOneById(id, filter, callback) {
 			if (typeof callback === "undefined") {
@@ -160,6 +181,7 @@ module.exports = function(dependencies) {
 			createOne: createOne,
 			readOneById: readOneById,
 			updateOneById: updateOneById,
+			patchOneById: patchOneById,
 			destroyOneById: destroyOneById
 		};
 	};
