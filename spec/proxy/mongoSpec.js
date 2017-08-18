@@ -60,7 +60,7 @@ describe("Mongo proxy", function() {
 					callback(null, {});
 				},
 
-				findOneAndUpdate: function(id, data, callback) {
+				findOneAndUpdate: function(id, data, options, callback) {
 					callback(null);
 				},
 
