@@ -14,7 +14,7 @@ module.exports = function(dependencies) {
 
 	var extend = dependencies.extend;
 	var async = dependencies.async;
-	const ObjectId = dependencies.ObjectId;
+	const objectId = dependencies.ObjectId;
 	
 	return function createMongoProxy(config) {
 		config = config || {};
@@ -60,9 +60,9 @@ module.exports = function(dependencies) {
 			if(config.foreignFields) {
 				config.foreignFields.forEach((item) => {
 					if(query.find.hasOwnProperty(item)) {
-						query.find[item] = ObjectId(query.find[item]);
+						query.find[item] = objectId(query.find[item]);
 					}
-				})
+				});
 			}
 
 			if(config.populate) {
@@ -88,7 +88,7 @@ module.exports = function(dependencies) {
 					.aggregate(aggregateArray)
 					.exec((err, result) => {
 						result.forEach((item, index, array) => {
-							array[index][config.populate.as] = item._user[0];
+							array[index][config.populate.as] = item[config.populate.as][0];
 						});
 
 						done(err, result);
@@ -113,7 +113,7 @@ module.exports = function(dependencies) {
 
 				model.exec((err, result) => {
 					done(err, result);
-				})
+				});
 			}
 		}
 
@@ -145,7 +145,7 @@ module.exports = function(dependencies) {
 			}
 
 			var find = {
-				_id: ObjectId(id)
+				_id: objectId(id)
 			};
 
 			if (filter) {
@@ -155,9 +155,9 @@ module.exports = function(dependencies) {
 			if(config.foreignFields) {
 				config.foreignFields.forEach((item) => {
 					if(find.hasOwnProperty(item)) {
-						find[item] = ObjectId(find[item]);
+						find[item] = objectId(find[item]);
 					}
-				})
+				});
 			}
 
 			if(config.populate) {
@@ -171,7 +171,7 @@ module.exports = function(dependencies) {
 						}
 					])
 					.exec((err, result) => {
-						if(result) {
+						if(Object.keys(result).length !== 0) {
 							result[config.populate.as] = result[config.populate.as][0];
 						}
 
