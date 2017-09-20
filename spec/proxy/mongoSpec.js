@@ -18,7 +18,8 @@ var mockExtend = jasmine.createSpy().and.callThrough();
 describe("Mongo proxy", function() {
 	var createMongoProxy = createMongoProxyCore({
 		async: mockAsync,
-		extend: mockExtend
+		extend: mockExtend,
+		ObjectId: (aString) => {return aString;}
 	});
 
 	describe("with invalid config", function() {
@@ -201,18 +202,17 @@ describe("Mongo proxy", function() {
 		describe("populate tests", () => {
 			let mongoProxy, createMongoProxy, mockModel;
 
-			it("readOne should call populate if populate exists in config", (done) => {
+			it("readOne should call aggregate if populate exists in config", (done) => {
 				let mockModel = {
+					aggregate: () => {
+						return mockModel;
+					},
 					find: function() {
 						return mockModel;
 					},
 
 					exec: function(callback) {
-						callback(null, {
-							toObject: () => {
-								return {};
-							}
-						});
+						callback(null, {});
 					},
 
 					count: function(query, callback) {
@@ -233,29 +233,29 @@ describe("Mongo proxy", function() {
 
 					findOneAndRemove: function(id, callback) {
 						callback(null);
-					},
-					populate: () => {
-						return mockModel;
 					}
 				};
 
-				spyOn(mockModel, "populate").and.callThrough();
+				spyOn(mockModel, "aggregate").and.callThrough();
 
 				createMongoProxy = createMongoProxyCore({
 					extend: mockExtend,
-					async: mockAsync
+					async: mockAsync,
+					ObjectId: (aString) => {return aString;}
 				});
 
 				mongoProxy = createMongoProxy({
 					model: mockModel,
 					populate: {
-						by: "id",
-						setProp: "prop"
+						from: "anothercollection",
+						localField: "anId",
+						foreignField: "anotherId",
+						as: "aProp"
 					}
 				});
 				
 				mongoProxy.readOneById({}, {user: "User1"}, (err, result) => {
-					expect(mockModel.populate).toHaveBeenCalledWith("id");
+					expect(mockModel.aggregate).toHaveBeenCalled();
 					expect(typeof result).toBe("object");
 					expect(err).toBe(null);
 				});
@@ -263,8 +263,11 @@ describe("Mongo proxy", function() {
 				done();
 			});
 
-			it("read should call populate if popoulate exists in config", (done) => {
+			it("read should call aggregate if popoulate exists in config", (done) => {
 				mockModel = {
+					aggregate: () => {
+						return mockModel;
+					},
 					find: () => {
 						return mockModel;
 					},
@@ -277,9 +280,6 @@ describe("Mongo proxy", function() {
 					limit: () => {
 						return mockModel;
 					},
-					populate: () => {
-						return mockModel;
-					},
 					exec: (callback) => {
 						callback(null, []);
 					},
@@ -288,7 +288,7 @@ describe("Mongo proxy", function() {
 					}
 				};
 
-				spyOn(mockModel, "populate").and.callThrough();
+				spyOn(mockModel, "aggregate").and.callThrough();
 
 				createMongoProxy = createMongoProxyCore({
 					extend: mockExtend,
@@ -298,19 +298,22 @@ describe("Mongo proxy", function() {
 								functions[func](done);
 							});
 						}
-					}
+					},
+					ObjectId: (aString) => {return aString;}
 				});
 
 				mongoProxy = createMongoProxy({
 					model: mockModel,
 					populate: {
-						by: "id",
-						setProp: "prop"
+						from: "anothercollection",
+						localField: "anId",
+						foreignField: "anotherId",
+						as: "aProp"
 					}
 				});
 
 				mongoProxy.read({}, {user: "User1"}, (err, result) => {
-					expect(mockModel.populate).toHaveBeenCalledWith("id");
+					expect(mockModel.aggregate).toHaveBeenCalled();
 					expect(Array.isArray(result)).toBe(true);
 					expect(err).toBe(null);
 				});

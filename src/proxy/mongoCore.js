@@ -14,6 +14,7 @@ module.exports = function(dependencies) {
 
 	var extend = dependencies.extend;
 	var async = dependencies.async;
+	const objectId = dependencies.ObjectId;
 	
 	return function createMongoProxy(config) {
 		config = config || {};
@@ -56,45 +57,64 @@ module.exports = function(dependencies) {
 		function getItems(query, done) {
 			var model = Model;
 
-			if (query.find) {
-				model = model.find(query.find);
-			}
-
-			if (query.sort) {
-				model = model.sort(query.sort);
-			}
-
-			if (typeof query.skip === "number") {
-				model = model.skip(query.skip);
-			}
-
-			if (typeof query.limit === "number") {
-				model = model.limit(query.limit);
+			if(config.foreignFields) {
+				config.foreignFields.forEach((item) => {
+					if(query.find.hasOwnProperty(item)) {
+						query.find[item] = objectId(query.find[item]);
+					}
+				});
 			}
 
 			if(config.populate) {
-				model = model.populate(config.populate.by);
-			}
-
-			model.exec(function(err, result) {
-				if(config.populate) {
-					for(let idx = 0; idx < result.length; idx += 1) {
-						result[idx] = result[idx].toObject();
-
-						result[idx][config.populate.setProp] = {};
-						
-						for(let key in result[idx][config.populate.by]) {
-							if(key !== "_id"){
-								result[idx][config.populate.setProp][key] = result[idx][config.populate.by][key];
-							}
-						}
-
-						result[idx][config.populate.by] = result[idx][config.populate.by]._id;
-					}
+				let aggregateArray = [{$lookup: config.populate}];
+				
+				if(query.find) {
+					aggregateArray.push({$match: query.find});
 				}
 				
-				done(err, result);
-			});
+				if(query.sort) {
+					aggregateArray.push({$sort: query.sort});
+				}
+
+				if(query.skip) {
+					aggregateArray.push({$skip: query.skip});
+				}
+
+				if(query.limit) {
+					aggregateArray.push({$limit: query.limit});
+				}
+
+				model
+					.aggregate(aggregateArray)
+					.exec((err, result) => {
+						result.forEach((item, index, array) => {
+							array[index][config.populate.as] = item[config.populate.as][0];
+						});
+
+						done(err, result);
+					});
+					
+			} else {
+				if (query.find) {
+					model = model.find(query.find);
+				}
+	
+				if (query.sort) {
+					model = model.sort(query.sort);
+				}
+	
+				if (typeof query.skip === "number") {
+					model = model.skip(query.skip);
+				}
+	
+				if (typeof query.limit === "number") {
+					model = model.limit(query.limit);
+				}	
+
+				model.exec((err, result) => {
+					done(err, result);
+				});
+			}
 		}
 
 		function getItemCount(query, done) {
@@ -125,34 +145,43 @@ module.exports = function(dependencies) {
 			}
 
 			var find = {
-				_id: id
+				_id: objectId(id)
 			};
 
 			if (filter) {
 				extend(find, filter);	
 			}
 
-			if(config.populate) {
-				Model.findOne(find).populate(config.populate.by).exec((err, result) => {
-					if(!(Object.keys(result).length === 1 && result.toObject)) {
-						result = result.toObject();
-						result[config.populate.setProp] = {};
-
-						for(let key in result[config.populate.by]) {
-							if(key !== "_id"){
-								result[config.populate.setProp][key] = result[config.populate.by][key];
-							}
-						}
-						
-						result[config.populate.by] = result[config.populate.by]._id;
+			if(config.foreignFields) {
+				config.foreignFields.forEach((item) => {
+					if(find.hasOwnProperty(item)) {
+						find[item] = objectId(find[item]);
 					}
-					return callback(err, result);
 				});
 			}
 
-			Model.findOne(find, function(err, result) {
-				callback(err, result);
-			});
+			if(config.populate) {
+				Model
+					.aggregate([
+						{
+							$lookup: config.populate
+						},
+						{
+							$match: find
+						}
+					])
+					.exec((err, result) => {
+						if(Object.keys(result).length !== 0) {
+							result[config.populate.as] = result[config.populate.as][0];
+						}
+
+						callback(err, result);	
+					});
+			} else {
+				Model.findOne(find, function(err, result) {
+					callback(err, result);
+				}); 
+			}
 		}
 
 
