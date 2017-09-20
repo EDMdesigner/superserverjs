@@ -73,10 +73,11 @@ app.use("/images", createCrudRouter({
 	proxy: fileProxy
 }));
 
-app.use("/gallery", createGalleryRouter({
-	createInfoObject: function(data) {
+app.use("/user", createGalleryRouter({
+	createInfoObject: function(data, req) {
 		return {
-			title: data.file.name,
+			title: req.body.title,
+			originalName: data.file.name,
 			id: data.id,
 			createdAt: data.createdAt,
 			url: "http://localhost:7357/images/" + data.id

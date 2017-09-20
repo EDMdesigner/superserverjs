@@ -7,9 +7,7 @@ pipeline {
 	stages {
 		stage('build') {
 			steps {
-				withNPM(npmrcConfig:'npmrc-private') {
-					sh 'npm install'
-				}
+				sh 'npm install'
 			}
 		}
 		stage('test') {
@@ -25,16 +23,6 @@ pipeline {
 			}
 			steps {
 				withNPM(npmrcConfig:'npmrc-global') {
-					sh 'npm publish'
-				}
-			}
-		}
-		stage('NPM publish [staging]') {
-			when {
-				branch "staging"
-			}
-			steps {
-				withNPM(npmrcConfig:'npmrc-private') {
 					sh 'npm publish'
 				}
 			}
