@@ -212,7 +212,7 @@ describe("Mongo proxy", function() {
 					},
 
 					exec: function(callback) {
-						callback(null, {});
+						callback(null, []);
 					},
 
 					count: function(query, callback) {
