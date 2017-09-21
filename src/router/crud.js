@@ -47,11 +47,21 @@ module.exports = function createCRUDRouter(config) {
 			query = req.query;
 		}
 
-		query.find = objectify(query.find);
-		query.sort = objectify(query.sort);
+		if(query.find) {
+			query.find = objectify(query.find);
+		}
 
-		query.skip = intify(query.skip, 0);
-		query.limit = intify(query.limit, 10);
+		if(query.sort) {
+			query.sort = objectify(query.sort);
+		}
+
+		if(query.skip) {
+			query.skip = intify(query.skip, 0);
+		}
+
+		if(query.limit) {
+			query.limit = intify(query.limit, 10);
+		}
 
 		getProxy(req, function(err, proxy) {
 			if (err) {
@@ -181,6 +191,42 @@ module.exports = function createCRUDRouter(config) {
 	let putParams = addPrehooksToParams(config, ["/:id"], "put");
 	putParams.push(put);
 	router.put.apply(router, putParams);
+
+
+
+	/*
+		Patch
+	*/
+
+	function patch(req, res) {
+		// avoid accidentally apply id to the filter from preHooks
+		if (req.filter && req.filter.id) {
+			delete req.filter.id;
+		}
+
+		getProxy(req, function(err, proxy) {
+			if (err) {
+				return res.send({"err": err, "success": false});
+			}
+
+			checkProxy({
+				proxy: proxy,
+				msgPrefix: "proxy"
+			});
+
+			proxy.updateOneById(
+				req.params.id,
+				req.body,
+				req.filter,
+				createResponseHandlerWithHooks(config, req, res, "patch")
+			);
+		});
+	}
+
+	let patchParams = addPrehooksToParams(config, ["/:id"], "patch");
+	patchParams.push(patch);
+	router.patch.apply(router, patchParams);
+
 
 
 	/*

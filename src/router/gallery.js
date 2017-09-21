@@ -250,7 +250,7 @@ module.exports = function createGalleryRouter(config) {
 				return res.send({"err": err, "success": false});
 			}
 			response.file = data.file;
-			var info = createInfoObject(response);
+			var info = createInfoObject(response, req);
 
 			infoProxy.createOne(
 				info,
@@ -400,6 +400,42 @@ module.exports = function createGalleryRouter(config) {
 	putParams.push(put);
 	router.put.apply(router, putParams);
 
+
+	/*
+		PATCH
+	*/
+
+	function patch(req, res) {
+		var id = req.params.id;
+		var data = req.body;
+
+		// avoid accidentally apply id to the filter from preHooks
+		if (req.filter && req.filter.id) {
+			delete req.filter.id;
+		}
+
+		getInfoProxy(req, function(err, infoProxy) {
+			if (err) {
+				return res.send({"err": err, "success": false});
+			}
+
+			checkProxy({
+				proxy: infoProxy,
+				msgPrefix: "infoProxy"
+			});
+
+			infoProxy.patchOneById(
+				id,
+				data,
+				req.filter,
+				createResponseHandlerWithHooks(config, req, res, "patch")
+			);
+		});
+	}
+
+	let patchParams = addPrehooksToParams(config, ["/:id"], "patch");
+	patchParams.push(patch);
+	router.patch.apply(router, patchParams);
 
 	/*
 		██████  ███████ ██      ███████ ████████ ███████

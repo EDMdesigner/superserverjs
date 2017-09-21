@@ -1,3 +1,4 @@
+"use strict";
 /* 
  * MongoDB proxy core
  */
@@ -13,6 +14,7 @@ module.exports = function(dependencies) {
 
 	var extend = dependencies.extend;
 	var async = dependencies.async;
+	const objectId = dependencies.ObjectId;
 	
 	return function createMongoProxy(config) {
 		config = config || {};
@@ -55,25 +57,64 @@ module.exports = function(dependencies) {
 		function getItems(query, done) {
 			var model = Model;
 
-			if (query.find) {
-				model = model.find(query.find);
+			if(config.foreignFields) {
+				config.foreignFields.forEach((item) => {
+					if(query.find.hasOwnProperty(item)) {
+						query.find[item] = objectId(query.find[item]);
+					}
+				});
 			}
 
-			if (query.sort) {
-				model = model.sort(query.sort);
-			}
+			if(config.populate) {
+				let aggregateArray = [{$lookup: config.populate}];
+				
+				if(query.find) {
+					aggregateArray.push({$match: query.find});
+				}
+				
+				if(query.sort) {
+					aggregateArray.push({$sort: query.sort});
+				}
 
-			if (typeof query.skip === "number") {
-				model = model.skip(query.skip);
-			}
+				if(query.skip) {
+					aggregateArray.push({$skip: query.skip});
+				}
 
-			if (typeof query.limit === "number") {
-				model = model.limit(query.limit);
-			}
+				if(query.limit) {
+					aggregateArray.push({$limit: query.limit});
+				}
 
-			model.exec(function(err, result) {
-				done(err, result);
-			});
+				model
+					.aggregate(aggregateArray)
+					.exec((err, result) => {
+						result.forEach((item, index, array) => {
+							array[index][config.populate.as] = item[config.populate.as][0];
+						});
+
+						done(err, result);
+					});
+					
+			} else {
+				if (query.find) {
+					model = model.find(query.find);
+				}
+	
+				if (query.sort) {
+					model = model.sort(query.sort);
+				}
+	
+				if (typeof query.skip === "number") {
+					model = model.skip(query.skip);
+				}
+	
+				if (typeof query.limit === "number") {
+					model = model.limit(query.limit);
+				}	
+
+				model.exec((err, result) => {
+					done(err, result);
+				});
+			}
 		}
 
 		function getItemCount(query, done) {
@@ -96,7 +137,7 @@ module.exports = function(dependencies) {
 				callback(err, result);
 			});
 		}
-
+ 
 		function readOneById(id, filter, callback) {
 			if (typeof callback === "undefined") {
 				callback = filter;
@@ -104,16 +145,43 @@ module.exports = function(dependencies) {
 			}
 
 			var find = {
-				_id: id
+				_id: objectId(id)
 			};
 
 			if (filter) {
 				extend(find, filter);	
 			}
 
-			Model.findOne(find, function(err, result) {
-				callback(err, result);
-			});
+			if(config.foreignFields) {
+				config.foreignFields.forEach((item) => {
+					if(find.hasOwnProperty(item)) {
+						find[item] = objectId(find[item]);
+					}
+				});
+			}
+
+			if(config.populate) {
+				Model
+					.aggregate([
+						{
+							$lookup: config.populate
+						},
+						{
+							$match: find
+						}
+					])
+					.exec((err, result) => {
+						if(Object.keys(result).length !== 0) {
+							result[config.populate.as] = result[config.populate.as][0];
+						}
+
+						callback(err, result);	
+					});
+			} else {
+				Model.findOne(find, function(err, result) {
+					callback(err, result);
+				}); 
+			}
 		}
 
 
@@ -131,10 +199,31 @@ module.exports = function(dependencies) {
 				extend(find, filter);	
 			}
 
-			Model.findOneAndUpdate(find, newData, function(err, result) {
+			Model.findOneAndUpdate(find, newData, {new: true}, function(err, result) {
 				callback(err, result);
 			});
 		}
+
+
+		function patchOneById(id, newData, filter, callback) {
+			if (typeof callback === "undefined") {
+				callback = filter;
+				filter = null;
+			}
+
+			var find = {
+				_id: id
+			};
+
+			if (filter) {
+				extend(find, filter);	
+			}
+
+			Model.findOneAndUpdate(find, newData, {new: true}, function(err, result) {
+				callback(err, result);
+			});
+		}
+
 
 		function destroyOneById(id, filter, callback) {
 			if (typeof callback === "undefined") {
@@ -160,6 +249,7 @@ module.exports = function(dependencies) {
 			createOne: createOne,
 			readOneById: readOneById,
 			updateOneById: updateOneById,
+			patchOneById: patchOneById,
 			destroyOneById: destroyOneById
 		};
 	};
