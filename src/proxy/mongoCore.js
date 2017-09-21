@@ -34,6 +34,8 @@ module.exports = function(dependencies) {
 			if (!query.find) {
 				query.find = {};
 			}
+
+			let find = query.find;
 			
 			if (filter) {
 				extend(query.find, filter);	
@@ -41,7 +43,7 @@ module.exports = function(dependencies) {
 
 			async.parallel({
 				items: getItems.bind(null, query),
-				count: getItemCount.bind(null, query)
+				count: getItemCount.bind(null, find)
 			}, function(err, result) {
 				if (err) {
 					return callback(err);
@@ -87,9 +89,11 @@ module.exports = function(dependencies) {
 				model
 					.aggregate(aggregateArray)
 					.exec((err, result) => {
-						result.forEach((item, index, array) => {
-							array[index][config.populate.as] = item[config.populate.as][0];
-						});
+						if(result) {	
+							result.forEach((item, index, array) => {
+								array[index][config.populate.as] = item[config.populate.as][0];
+							});
+						}
 
 						done(err, result);
 					});
@@ -118,7 +122,7 @@ module.exports = function(dependencies) {
 		}
 
 		function getItemCount(query, done) {
-			Model.count(query.find, function(err, result) {
+			Model.count(query, function(err, result) {
 				done(err, result);
 			});
 		}
@@ -171,8 +175,10 @@ module.exports = function(dependencies) {
 						}
 					])
 					.exec((err, result) => {
-						if(Object.keys(result).length !== 0) {
-							result[config.populate.as] = result[config.populate.as][0];
+						if(result) {
+							result.forEach((item, index, array) => {
+								array[index][config.populate.as] = item[config.populate.as][0];
+							});
 						}
 
 						callback(err, result);	
