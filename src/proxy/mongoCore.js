@@ -34,8 +34,6 @@ module.exports = function(dependencies) {
 			if (!query.find) {
 				query.find = {};
 			}
-
-			let find = query.find;
 			
 			if (filter) {
 				extend(query.find, filter);	
@@ -43,7 +41,7 @@ module.exports = function(dependencies) {
 
 			async.parallel({
 				items: getItems.bind(null, query),
-				count: getItemCount.bind(null, find)
+				count: getItemCount.bind(null, filter)
 			}, function(err, result) {
 				if (err) {
 					return callback(err);
