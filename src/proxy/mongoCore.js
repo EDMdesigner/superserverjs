@@ -86,9 +86,11 @@ module.exports = function(dependencies) {
 							};
 
 							config.populate.forEach((object) => {
-								group[object.as] = {
-									$first: "$" + object.as
-								};
+								if(item.as !== object.as) {
+									group[object.as] = {
+										$first: "$" + object.as
+									};
+								}
 							});
 
 							config.foreignFields.forEach((field) => {
@@ -96,6 +98,8 @@ module.exports = function(dependencies) {
 									$first: "$" + field
 								};
 							});
+
+							console.log(group);
 
 							aggregateArray.push({$group: group});
 						} else {
@@ -217,9 +221,11 @@ module.exports = function(dependencies) {
 							};
 
 							config.populate.forEach((object) => {
-								group[object.as] = {
-									$first: "$" + object.as
-								};
+								if(item.as !== object.as) {
+									group[object.as] = {
+										$first: "$" + object.as
+									};
+								}
 							});
 					
 							config.foreignFields.forEach((field) => {
