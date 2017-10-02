@@ -69,7 +69,7 @@ module.exports = function(dependencies) {
 				let aggregateArray = [];
 
 				if(Array.isArray(config.populate)) {
-					config.populate.forEach((item) => {
+					config.populate.forEach((item, idx) => {
 						if(model.schema.path(item.localField).instance === "Array") {
 							aggregateArray.push({$unwind: "$" + item.localField});
 							aggregateArray.push({$lookup: item});
@@ -85,12 +85,16 @@ module.exports = function(dependencies) {
 								}
 							};
 
-							config.populate.forEach((object) => {
-								if(item.as !== object.as) {
+							config.populate.forEach((object, idy) => {
+								if(item.as !== object.as && idx > idy) {
 									group[object.as] = {
 										$first: "$" + object.as
 									};
 								}
+
+								group[object.localField] = {
+									$first: "$" + object.localField
+								};
 							});
 
 							config.foreignFields.forEach((field) => {
@@ -202,7 +206,7 @@ module.exports = function(dependencies) {
 				let aggregateArray = [];
 				
 				if(Array.isArray(config.populate)) {
-					config.populate.forEach((item) => {
+					config.populate.forEach((item, idx) => {
 						if(Model.schema.path(item.localField).instance === "Array") {
 							aggregateArray.push({$unwind: "$" + item.localField});
 							aggregateArray.push({$lookup: item});
@@ -218,12 +222,16 @@ module.exports = function(dependencies) {
 								}
 							};
 
-							config.populate.forEach((object) => {
-								if(item.as !== object.as) {
+							config.populate.forEach((object, idy) => {
+								if(item.as !== object.as && idx > idy) {
 									group[object.as] = {
 										$first: "$" + object.as
 									};
 								}
+
+								group[object.localField] = {
+									$first: "$" + object.localField
+								};
 							});
 					
 							config.foreignFields.forEach((field) => {
