@@ -66,7 +66,47 @@ module.exports = function(dependencies) {
 			}
 
 			if(config.populate) {
-				let aggregateArray = [{$lookup: config.populate}];
+				let aggregateArray = [];
+
+				if(Array.isArray(config.populate)) {
+					config.populate.forEach((item) => {
+						if(model.schema.path(item.localField).instance === "Array") {
+							aggregateArray.push({$unwind: "$" + item.localField});
+							aggregateArray.push({$lookup: item});
+							aggregateArray.push({$unwind: "$" + item.as});
+
+							let group = {
+								_id: "$_id",
+								[item.localField]: {
+									$push: "$" + item.localField
+								},
+								[item.as]: {
+									$push: "$" + item.as
+								}
+							}
+
+							config.populate.forEach((object) => {
+								group[object.as] = {
+									$first: "$" + object.as
+								};
+							});
+
+							config.foreignFields.forEach((field) => {
+								group[field] = {
+									$first: "$" + field
+								}
+							});
+
+							aggregateArray.push({$group: group});
+						} else {
+							aggregateArray.push({$lookup: item});
+							aggregateArray.push({$unwind: "$" + item.as});
+						}
+					});
+				} else {
+					aggregateArray.push({$lookup: config.populate});
+					aggregateArray.push({$unwind: "$" + config.populate.as});
+				}
 				
 				if(query.find) {
 					aggregateArray.push({$match: query.find});
@@ -87,12 +127,6 @@ module.exports = function(dependencies) {
 				model
 					.aggregate(aggregateArray)
 					.exec((err, result) => {
-						if(result) {	
-							result.forEach((item, index, array) => {
-								array[index][config.populate.as] = item[config.populate.as][0];
-							});
-						}
-
 						done(err, result);
 					});
 					
@@ -163,22 +197,53 @@ module.exports = function(dependencies) {
 			}
 
 			if(config.populate) {
-				Model
-					.aggregate([
-						{
-							$lookup: config.populate
-						},
-						{
-							$match: find
-						}
-					])
-					.exec((err, result) => {
-						if(result) {
-							result.forEach((item, index, array) => {
-								array[index][config.populate.as] = item[config.populate.as][0];
-							});
-						}
+				let aggregateArray = [];
+				
+				if(Array.isArray(config.populate)) {
+					config.populate.forEach((item) => {
+						if(Model.schema.path(item.localField).instance === "Array") {
+							aggregateArray.push({$unwind: "$" + item.localField});
+							aggregateArray.push({$lookup: item});
+							aggregateArray.push({$unwind: "$" + item.as});
+					
+							let group = {
+								_id: "$_id",
+								[item.localField]: {
+									$push: "$" + item.localField
+								},
+								[item.as]: {
+									$push: "$" + item.as
+								}
+							}
 
+							config.populate.forEach((object) => {
+								group[object.as] = {
+									$first: "$" + object.as
+								}
+							});
+					
+							config.foreignFields.forEach((field) => {
+								group[field] = {
+									$first: "$" + field
+								}
+							});
+					
+							aggregateArray.push({$group: group});
+						} else {
+							aggregateArray.push({$lookup: item});
+							aggregateArray.push({$unwind: "$" + item.as});		
+						}
+					});
+				} else {
+					aggregateArray.push({$lookup: config.populate});
+					aggregateArray.push({$unwind: "$" + config.populate.as});
+				}
+
+				aggregateArray.push({$match: find});
+
+				Model
+					.aggregate(aggregateArray)
+					.exec((err, result) => {
 						callback(err, result);	
 					});
 			} else {
