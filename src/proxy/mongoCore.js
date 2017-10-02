@@ -83,7 +83,7 @@ module.exports = function(dependencies) {
 								[item.as]: {
 									$push: "$" + item.as
 								}
-							}
+							};
 
 							config.populate.forEach((object) => {
 								group[object.as] = {
@@ -94,7 +94,7 @@ module.exports = function(dependencies) {
 							config.foreignFields.forEach((field) => {
 								group[field] = {
 									$first: "$" + field
-								}
+								};
 							});
 
 							aggregateArray.push({$group: group});
@@ -214,18 +214,18 @@ module.exports = function(dependencies) {
 								[item.as]: {
 									$push: "$" + item.as
 								}
-							}
+							};
 
 							config.populate.forEach((object) => {
 								group[object.as] = {
 									$first: "$" + object.as
-								}
+								};
 							});
 					
 							config.foreignFields.forEach((field) => {
 								group[field] = {
 									$first: "$" + field
-								}
+								};
 							});
 					
 							aggregateArray.push({$group: group});
