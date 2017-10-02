@@ -99,8 +99,6 @@ module.exports = function(dependencies) {
 								};
 							});
 
-							console.log(group);
-
 							aggregateArray.push({$group: group});
 						} else {
 							aggregateArray.push({$lookup: item});
