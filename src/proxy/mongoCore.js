@@ -12,8 +12,8 @@ module.exports = function(dependencies) {
 		throw new Error("extend dependency is mandatory!");
 	}
 
-	var extend = dependencies.extend;
-	var async = dependencies.async;
+	const extend = dependencies.extend;
+	const async = dependencies.async;
 	const objectId = dependencies.ObjectId;
 	
 	return function createMongoProxy(config) {
@@ -23,7 +23,7 @@ module.exports = function(dependencies) {
 			throw new Error("config.model is mandatory!");
 		}
 
-		var Model = config.model;
+		const Model = config.model;
 
 		function read(query, filter, callback) {
 			if (typeof callback === "undefined") {
@@ -55,7 +55,7 @@ module.exports = function(dependencies) {
 		}
 
 		function getItems(query, done) {
-			var model = Model;
+			let model = Model;
 
 			if (config.foreignFields) {
 				config.foreignFields.forEach((item) => {
@@ -121,19 +121,19 @@ module.exports = function(dependencies) {
 				});
 			}
 				
-			if(query.find) {
+			if (query.find) {
 				aggregateArray.push({$match: query.find});
 			}
 			
-			if(query.sort) {
+			if (query.sort) {
 				aggregateArray.push({$sort: query.sort});
 			}
 
-			if(query.skip) {
+			if (query.skip) {
 				aggregateArray.push({$skip: query.skip});
 			}
 
-			if(query.limit) {
+			if (query.limit) {
 				aggregateArray.push({$limit: query.limit});
 			}
 
@@ -171,7 +171,7 @@ module.exports = function(dependencies) {
 				filter = null;
 			}
 
-			var find = {
+			let find = {
 				_id: objectId(id)
 			};
 
@@ -257,7 +257,7 @@ module.exports = function(dependencies) {
 				filter = null;
 			}
 
-			var find = {
+			let find = {
 				_id: id
 			};
 
@@ -277,7 +277,7 @@ module.exports = function(dependencies) {
 				filter = null;
 			}
 
-			var find = {
+			let find = {
 				_id: id
 			};
 
@@ -297,7 +297,7 @@ module.exports = function(dependencies) {
 				filter = null;
 			}
 
-			var find = {
+			let find = {
 				_id: id
 			};
 
