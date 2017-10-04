@@ -57,108 +57,91 @@ module.exports = function(dependencies) {
 		function getItems(query, done) {
 			var model = Model;
 
-			if(config.foreignFields) {
+			if (config.foreignFields) {
 				config.foreignFields.forEach((item) => {
 					if(query.find.hasOwnProperty(item)) {
 						query.find[item] = objectId(query.find[item]);
 					}
 				});
 			}
+			
+			let aggregateArray = [];
 
-			if(config.populate) {
-				let aggregateArray = [];
+			if (config.populate) {
+				if (!Array.isArray(config.populate)) {
+					config.populate = [config.populate];
+				}
+				config.populate.forEach(item => {
+					aggregateArray.push({$lookup: item});
+					aggregateArray.push({$unwind: "$" + item.as});
+				});
+			}
 
-				if(Array.isArray(config.populate)) {
-					config.populate.forEach((item, idx) => {
-						if(model.schema.path(item.localField).instance === "Array") {
-							aggregateArray.push({$unwind: "$" + item.localField});
-							aggregateArray.push({$lookup: item});
-							aggregateArray.push({$unwind: "$" + item.as});
+			if (config.populateArray) {
+				if (!Array.isArray(config.populateArray)) {
+					config.populateArray = [config.populateArray];
+				}
 
-							let group = {
+				config.populateArray.forEach(item => {
+					aggregateArray = aggregateArray.concat([
+						{
+							$unwind: "$" + item.localField
+						},
+						{
+							$lookup: item
+						},
+						{
+							$unwind: "$" + item.as
+						},
+						{
+							$group: {
 								_id: "$_id",
 								[item.localField]: {
 									$push: "$" + item.localField
 								},
 								[item.as]: {
 									$push: "$" + item.as
-								}
-							};
-
-							config.populate.forEach((object, idy) => {
-								if(item.as !== object.as && idx > idy) {
-									group[object.as] = {
-										$first: "$" + object.as
-									};
-								}
-
-								if(idx !== idy) {
-									group[object.localField] = {
-										$first: "$" + object.localField
-									};
-								}
-							});
-
-							config.foreignFields.forEach((field) => {
-								group[field] = {
-									$first: "$" + field
-								};
-							});
-
-							aggregateArray.push({$group: group});
-						} else {
-							aggregateArray.push({$lookup: item});
-							aggregateArray.push({$unwind: "$" + item.as});
+								},
+								"__doc": { $first: "$$ROOT" }
+							}
+						},
+						{
+							$project: {
+								"__doc": "$__doc",
+								["__doc." + item.localField]: "$" + item.localField,
+								["__doc." + item.as]: "$" + item.as
+							}
+						},
+						{
+							$replaceRoot: {
+								newRoot: "$__doc"
+							}
 						}
-					});
-				} else {
-					aggregateArray.push({$lookup: config.populate});
-					aggregateArray.push({$unwind: "$" + config.populate.as});
-				}
-				
-				if(query.find) {
-					aggregateArray.push({$match: query.find});
-				}
-				
-				if(query.sort) {
-					aggregateArray.push({$sort: query.sort});
-				}
-
-				if(query.skip) {
-					aggregateArray.push({$skip: query.skip});
-				}
-
-				if(query.limit) {
-					aggregateArray.push({$limit: query.limit});
-				}
-
-				model
-					.aggregate(aggregateArray)
-					.exec((err, result) => {
-						done(err, result);
-					});
-					
-			} else {
-				if (query.find) {
-					model = model.find(query.find);
-				}
-	
-				if (query.sort) {
-					model = model.sort(query.sort);
-				}
-	
-				if (typeof query.skip === "number") {
-					model = model.skip(query.skip);
-				}
-	
-				if (typeof query.limit === "number") {
-					model = model.limit(query.limit);
-				}	
-
-				model.exec((err, result) => {
-					done(err, result);
+					]);					
 				});
 			}
+				
+			if(query.find) {
+				aggregateArray.push({$match: query.find});
+			}
+			
+			if(query.sort) {
+				aggregateArray.push({$sort: query.sort});
+			}
+
+			if(query.skip) {
+				aggregateArray.push({$skip: query.skip});
+			}
+
+			if(query.limit) {
+				aggregateArray.push({$limit: query.limit});
+			}
+
+			model
+				.aggregate(aggregateArray)
+				.exec((err, result) => {
+					done(err, result);
+			});
 		}
 
 		function getItemCount(query, done) {
