@@ -92,9 +92,11 @@ module.exports = function(dependencies) {
 									};
 								}
 
-								group[object.localField] = {
-									$first: "$" + object.localField
-								};
+								if(idx !== idy) {
+									group[object.localField] = {
+										$first: "$" + object.localField
+									};
+								}
 							});
 
 							config.foreignFields.forEach((field) => {
