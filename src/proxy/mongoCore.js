@@ -55,6 +55,7 @@ module.exports = function(dependencies) {
 		}
 
 		function getItems(query, done) {
+			console.log("BEER WITH BEER");
 			var model = Model;
 
 			let foreignFields = config.foreignFields || [];
@@ -65,6 +66,28 @@ module.exports = function(dependencies) {
 					query.find[item] = objectId(query.find[item]);
 				}
 			});
+
+			if (!config.populate && !config.populateArrayField) {
+				if (query.find) {
+					model = model.find(query.find);
+				}
+	
+				if (query.sort) {
+					model = model.sort(query.sort);
+				}
+	
+				if (typeof query.skip === "number") {
+					model = model.skip(query.skip);
+				}
+	
+				if (typeof query.limit === "number") {
+					model = model.limit(query.limit);
+				}	
+
+				return model.exec((err, result) => {
+					done(err, result);
+				});
+			}
 
 			let aggregateArray = [];
 
@@ -92,13 +115,19 @@ module.exports = function(dependencies) {
 				config.populateArrayField.forEach(item => {
 					aggregateArray = aggregateArray.concat([
 						{
-							$unwind: "$" + item.localField // creates multiple documents by "splitting" the array field
+							$unwind: { // creates multiple documents by "splitting" the array field
+								path: "$" + item.localField,
+								preserveNullAndEmptyArrays: true
+							}
 						},
 						{
 							$lookup: item
 						},
 						{
-							$unwind: "$" + item.as // unwrapping the resulting one-element array
+							$unwind: { // unwrapping the resulting one-element array
+								path: "$" + item.as,
+								preserveNullAndEmptyArrays: true
+							}
 						}
 					]);
 
@@ -121,6 +150,15 @@ module.exports = function(dependencies) {
 								$first: "$" + otherPopulateItem.localField
 							};
 						}
+					});
+
+					config.populate.forEach(otherPopulateItem => {
+						group[otherPopulateItem.as] = {
+							$first: "$" + otherPopulateItem.as
+						};
+						group[otherPopulateItem.localField] = {
+							$first: "$" + otherPopulateItem.localField
+						};
 					});
 
 					foreignFields.forEach((field) => {
