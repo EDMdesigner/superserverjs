@@ -85,7 +85,10 @@ module.exports = function(dependencies) {
 				config.populateArray.forEach(item => {
 					aggregateArray = aggregateArray.concat([
 						{
-							$unwind: "$" + item.localField
+							$unwind: {
+								path: "$" + item.localField,
+								preserveNullAndEmptyArrays: true
+							}
 						},
 						{
 							$lookup: item
