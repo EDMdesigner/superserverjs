@@ -217,7 +217,7 @@ describe("Gallery router", function() {
 		it("POST / - url", function(done) {
 			request(app)
 				.post("/")
-				.send({url: "http://images.buycostumes.com/mgen/merchandiser/mail-order-bride-adult-costume-bc-800820.jpg"})
+				.send({url: "http://kep.cdn.index.hu/1/0/1847/18470/184708/18470808_1135434_85d8df3786ff04ff767194b4f4a227f6_wm.jpg"})
 				.set("Accept", "application/json")
 				.expect(200)
 				.end(function(err, res) {
