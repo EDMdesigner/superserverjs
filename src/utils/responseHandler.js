@@ -6,7 +6,7 @@ function createResponseHandler(req, res, postHook) {
 
 	return function handleResponse(err, result) {
 		if (err) {
-			res.json({err: err});
+			res.status(500).json({err: err});
 			if (postHook) {
 				postHook(err);
 			}
