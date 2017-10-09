@@ -86,7 +86,7 @@ describe("crudRouter", function() {
 				request(app)
 					.get("/")
 					.set("Accept", "application/json")
-					.expect(200)
+					.expect(500)
 					.end(function(err, res) {
 						expect(err).toBeNull();
 						expect(res).toBeDefined();
@@ -106,7 +106,7 @@ describe("crudRouter", function() {
 				request(app)
 					.post("/")
 					.set("Accept", "application/json")
-					.expect(200)
+					.expect(500)
 					.end(function(err, res) {
 						expect(err).toBeNull();
 						expect(res).toBeDefined();
@@ -126,7 +126,7 @@ describe("crudRouter", function() {
 				request(app)
 					.get("/1")
 					.set("Accept", "application/json")
-					.expect(200)
+					.expect(500)
 					.end(function(err, res) {
 						expect(err).toBeNull();
 						expect(res).toBeDefined();
@@ -146,7 +146,7 @@ describe("crudRouter", function() {
 				request(app)
 					.put("/1")
 					.set("Accept", "application/json")
-					.expect(200)
+					.expect(500)
 					.end(function(err, res) {
 						expect(err).toBeNull();
 						expect(res).toBeDefined();
@@ -166,7 +166,7 @@ describe("crudRouter", function() {
 				request(app)
 					.del("/1")
 					.set("Accept", "application/json")
-					.expect(200)
+					.expect(500)
 					.end(function(err, res) {
 						expect(err).toBeNull();
 						expect(res).toBeDefined();
