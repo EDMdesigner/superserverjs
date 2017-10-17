@@ -346,13 +346,17 @@ module.exports = function(dependencies) {
 					aggregateArray.push({
 						$group: group
 					});
+
+					aggregateArray.push({
+						$match: find
+					});
 				});
 			}
 
 			Model
 				.aggregate(aggregateArray)
 				.exec((err, result) => {
-					callback(err, result);	
+					callback(err, result[0]);
 			});
 		}
 
@@ -372,7 +376,11 @@ module.exports = function(dependencies) {
 			}
 
 			Model.findOneAndUpdate(find, newData, {new: true}, function(err, result) {
-				callback(err, result);
+				if(err) {
+					callback(err, result);
+				} else {
+					readOneById(id, filter, callback);
+				}
 			});
 		}
 
@@ -392,7 +400,11 @@ module.exports = function(dependencies) {
 			}
 
 			Model.findOneAndUpdate(find, newData, {new: true}, function(err, result) {
-				callback(err, result);
+				if(err) {
+					callback(err, result);
+				} else {
+					readOneById(id, filter, callback);
+				}
 			});
 		}
 
