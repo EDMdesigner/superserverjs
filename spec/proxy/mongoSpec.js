@@ -256,7 +256,7 @@ describe("Mongo proxy", function() {
 				
 				mongoProxy.readOneById({}, {user: "User1"}, (err, result) => {
 					expect(mockModel.aggregate).toHaveBeenCalled();
-					expect(typeof result).toBe("object");
+					expect(typeof result).toBe("undefined");
 					expect(err).toBe(null);
 				});
 
