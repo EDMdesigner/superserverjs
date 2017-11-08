@@ -423,8 +423,12 @@ module.exports = function(dependencies) {
 				extend(find, filter);	
 			}
 
-			Model.findOneAndRemove(find, function(err, result) {
-				callback(err, result);
+			Model.findOne(find, (err, result) => {
+				if(err) {
+					return callback(err);
+				}
+
+				result.remove(callback);
 			});
 		}
 
