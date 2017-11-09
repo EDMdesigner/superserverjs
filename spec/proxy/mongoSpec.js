@@ -58,7 +58,11 @@ describe("Mongo proxy", function() {
 				},
 
 				findOne: function(id, callback) {
-					callback(null, {});
+					callback(null, {
+						remove: (callback) => {
+							callback(null);
+						}
+					});
 				},
 
 				findOneAndUpdate: function(id, data, options, callback) {
