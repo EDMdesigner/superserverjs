@@ -31,7 +31,7 @@ var sourceFiles = [
 
 superGulp.taskTemplates.initBackendTasks({
 	packageJson: packageJson,
-	coverage: 60,
+	coverage: 50,
 	files: {
 		js: jsFiles,
 		json: jsonFiles,

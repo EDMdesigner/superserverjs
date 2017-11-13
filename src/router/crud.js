@@ -47,11 +47,21 @@ module.exports = function createCRUDRouter(config) {
 			query = req.query;
 		}
 
-		query.find = objectify(query.find);
-		query.sort = objectify(query.sort);
+		if(query.find) {
+			query.find = objectify(query.find);
+		}
 
-		query.skip = intify(query.skip, 0);
-		query.limit = intify(query.limit, 10);
+		if(query.sort) {
+			query.sort = objectify(query.sort);
+		}
+
+		if(query.skip) {
+			query.skip = intify(query.skip, 0);
+		}
+
+		if(query.limit) {
+			query.limit = intify(query.limit, 10);
+		}
 
 		getProxy(req, function(err, proxy) {
 			if (err) {

@@ -1,3 +1,5 @@
+"use strict";
+
 var createMongoProxyCore = require("../../src/proxy/mongoCore");
 
 var mockAsync = {
@@ -16,7 +18,8 @@ var mockExtend = jasmine.createSpy().and.callThrough();
 describe("Mongo proxy", function() {
 	var createMongoProxy = createMongoProxyCore({
 		async: mockAsync,
-		extend: mockExtend
+		extend: mockExtend,
+		ObjectId: (aString) => {return aString;}
 	});
 
 	describe("with invalid config", function() {
@@ -55,7 +58,11 @@ describe("Mongo proxy", function() {
 				},
 
 				findOne: function(id, callback) {
-					callback(null, {});
+					callback(null, {
+						remove: (callback) => {
+							callback(null);
+						}
+					});
 				},
 
 				findOneAndUpdate: function(id, data, options, callback) {
@@ -196,6 +203,128 @@ describe("Mongo proxy", function() {
 			});
 		});
 
+		describe("populate tests", () => {
+			let mongoProxy, createMongoProxy, mockModel;
+
+			it("readOne should call aggregate if populate exists in config", (done) => {
+				let mockModel = {
+					aggregate: () => {
+						return mockModel;
+					},
+					find: function() {
+						return mockModel;
+					},
+
+					exec: function(callback) {
+						callback(null, []);
+					},
+
+					count: function(query, callback) {
+						callback(null, 0);
+					},
+
+					create: function(data, callback) {
+						callback(null);
+					},
+
+					findOne: function() {
+						return mockModel;
+					},
+
+					findOneAndUpdate: function(id, data, callback) {
+						callback(null);
+					},
+
+					findOneAndRemove: function(id, callback) {
+						callback(null);
+					}
+				};
+
+				spyOn(mockModel, "aggregate").and.callThrough();
+
+				createMongoProxy = createMongoProxyCore({
+					extend: mockExtend,
+					async: mockAsync,
+					ObjectId: (aString) => {return aString;}
+				});
+
+				mongoProxy = createMongoProxy({
+					model: mockModel,
+					populate: {
+						from: "anothercollection",
+						localField: "anId",
+						foreignField: "anotherId",
+						as: "aProp"
+					}
+				});
+				
+				mongoProxy.readOneById({}, {user: "User1"}, (err, result) => {
+					expect(mockModel.aggregate).toHaveBeenCalled();
+					expect(typeof result).toBe("undefined");
+					expect(err).toBe(null);
+				});
+
+				done();
+			});
+
+			it("read should call aggregate if popoulate exists in config", (done) => {
+				mockModel = {
+					aggregate: () => {
+						return mockModel;
+					},
+					find: () => {
+						return mockModel;
+					},
+					sort: () => {
+						return mockModel;
+					},
+					skip: () => {
+						return mockModel;
+					},
+					limit: () => {
+						return mockModel;
+					},
+					exec: (callback) => {
+						callback(null, []);
+					},
+					count: function(query, callback) {
+						callback(null, 0);
+					}
+				};
+
+				spyOn(mockModel, "aggregate").and.callThrough();
+
+				createMongoProxy = createMongoProxyCore({
+					extend: mockExtend,
+					async: {
+						parallel: (functions) => {
+							Object.keys(functions).forEach((func) => {
+								functions[func](done);
+							});
+						}
+					},
+					ObjectId: (aString) => {return aString;}
+				});
+
+				mongoProxy = createMongoProxy({
+					model: mockModel,
+					populate: {
+						from: "anothercollection",
+						localField: "anId",
+						foreignField: "anotherId",
+						as: "aProp"
+					}
+				});
+
+				mongoProxy.read({}, {user: "User1"}, (err, result) => {
+					expect(mockModel.aggregate).toHaveBeenCalled();
+					expect(Array.isArray(result)).toBe(true);
+					expect(err).toBe(null);
+				});
+
+				done();
+			});
+		});
 	});
 
 });
