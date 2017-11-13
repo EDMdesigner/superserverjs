@@ -166,7 +166,14 @@ describe("Gallery router", function() {
 
 			mockBinaryProxy = createMockProxy();
 			mockInfoProxy = createMockProxy();
-			createInfoObject = jasmine.createSpy("createInfoObjectSpy");
+			var obj = {
+				createInfoObject: function (config, callback) {
+					callback(config);
+				}
+			}
+
+			spyOn(obj, "createInfoObject").and.callThrough();
+			createInfoObject = obj.createInfoObject;
 
 
 			function calculateBinaryId() {
@@ -229,6 +236,7 @@ describe("Gallery router", function() {
 					expect(mockInfoProxy.readOneById).not.toHaveBeenCalled();
 					expect(mockInfoProxy.updateOneById).not.toHaveBeenCalled();
 					expect(mockInfoProxy.destroyOneById).not.toHaveBeenCalled();
+					expect(createInfoObject).toHaveBeenCalled();
 
 					expect(mockBinaryProxy.read).not.toHaveBeenCalled();
 					expect(mockBinaryProxy.createOne).toHaveBeenCalled();
@@ -255,6 +263,7 @@ describe("Gallery router", function() {
 					expect(mockInfoProxy.readOneById).not.toHaveBeenCalled();
 					expect(mockInfoProxy.updateOneById).not.toHaveBeenCalled();
 					expect(mockInfoProxy.destroyOneById).not.toHaveBeenCalled();
+					expect(createInfoObject).toHaveBeenCalled();					
 
 					expect(mockBinaryProxy.read).not.toHaveBeenCalled();
 					expect(mockBinaryProxy.createOne).toHaveBeenCalled();
