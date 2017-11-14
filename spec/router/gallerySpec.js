@@ -170,7 +170,7 @@ describe("Gallery router", function() {
 				createInfoObject: function (config, callback) {
 					callback(config);
 				}
-			}
+			};
 
 			spyOn(obj, "createInfoObject").and.callThrough();
 			createInfoObject = obj.createInfoObject;

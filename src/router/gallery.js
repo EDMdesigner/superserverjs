@@ -281,8 +281,6 @@ module.exports = function createGalleryRouter(config) {
 				});
 			} else {
 				// if image should be referenced with original URL
-				var url = req.body[fromUrlProp];
-
 				createInfoObject({
 					req: req,
 					res: res
