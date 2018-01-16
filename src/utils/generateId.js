@@ -1,10 +1,10 @@
 var crypto = require("crypto");
+var nextNum = 0;
 
 module.exports = function generateId() {
-	var nextNum = 0;
 
 	return function() {
-		var now = new Date();
+		var now = Date.now();
 		var hex = crypto.createHash("md5").update(now.toString() + nextNum).digest("hex");
 
 		nextNum += 1;
