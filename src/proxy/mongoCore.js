@@ -375,7 +375,12 @@ module.exports = function(dependencies) {
 				extend(find, filter);	
 			}
 
-			Model.findOneAndUpdate(find, newData, {new: true}, function(err, result) {
+			var options = {
+				new: true,
+				setDefaultsOnInsert: true
+			};
+
+			Model.findOneAndUpdate(find, newData, options, function(err, result) {
 				if(err) {
 					callback(err, result);
 				} else {
@@ -399,7 +404,12 @@ module.exports = function(dependencies) {
 				extend(find, filter);	
 			}
 
-			Model.findOneAndUpdate(find, newData, {new: true}, function(err, result) {
+			var options = {
+				new: true,
+				setDefaultsOnInsert: true
+			};
+
+			Model.findOneAndUpdate(find, newData, options, function(err, result) {
 				if(err) {
 					callback(err, result);
 				} else {
