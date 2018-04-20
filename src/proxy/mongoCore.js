@@ -74,6 +74,11 @@ module.exports = function(dependencies) {
 				if (query.sort) {
 					model = model.sort(query.sort);
 				}
+
+				if(query.select) {
+					console.log("selet called");
+					model = model.select(query.select);
+				}
 	
 				if (typeof query.skip === "number") {
 					model = model.skip(query.skip);
@@ -81,7 +86,7 @@ module.exports = function(dependencies) {
 	
 				if (typeof query.limit === "number") {
 					model = model.limit(query.limit);
-				}	
+				}
 
 				return model.exec((err, result) => {
 					done(err, result);
@@ -187,6 +192,12 @@ module.exports = function(dependencies) {
 			if(query.sort) {
 				aggregateArray.push({
 					$sort: query.sort
+				});
+			}
+
+			if(query.select) {
+				aggregateArray.push({
+					$select: query.select
 				});
 			}
 
