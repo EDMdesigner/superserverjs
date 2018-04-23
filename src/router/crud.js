@@ -56,7 +56,6 @@ module.exports = function createCRUDRouter(config) {
 		}
 
 		if(query.select) {
-			console.log("select called in crud router");
 			query.select = objectify(query.select);
 		}
 
