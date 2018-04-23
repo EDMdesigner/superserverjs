@@ -76,7 +76,6 @@ module.exports = function(dependencies) {
 				}
 
 				if(query.select) {
-					console.log("selet called");
 					model = model.select(query.select);
 				}
 	
