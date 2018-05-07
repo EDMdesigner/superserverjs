@@ -92,9 +92,9 @@ module.exports = function(dependencies) {
 
 			var params = {
 				Key: myKey,
-				Body: data,
+				Body: data.buffer,
 				ACL: "public-read",
-				ContentType: fileType(data).mime
+				ContentType: fileType(data.buffer).mime
 			};
 
 			s3.upload(params, function(err, data) {
