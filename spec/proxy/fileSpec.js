@@ -27,7 +27,7 @@ describe("fileProxy", function() {
 		});
 
 		it("should create a file in the testFolder directory", function(done) {
-			proxy.createOne("asdf", function(err, result) {
+			proxy.createOne({buffer: "asdf"}, function(err, result) {
 				expect(err).toBeNull();
 				expect(result.myVeryId).toBeDefined();
 

@@ -9,7 +9,7 @@ var mockAWS = {
 describe("AWS S3 proxy", function() {
 
 	var fakeMethod = function(params, cb) {
-		cb(null, {});
+		cb(null, {Contents: []});
 	};
 
 	var s3Proto = {
@@ -22,10 +22,10 @@ describe("AWS S3 proxy", function() {
 	var createS3Proxy;
 
 	beforeAll(function() {
-		spyOn(s3Proto, "listObjects");
-		spyOn(s3Proto, "upload");
-		spyOn(s3Proto, "getObject");
-		spyOn(s3Proto, "deleteObject");
+		spyOn(s3Proto, "listObjects").and.callThrough();
+		spyOn(s3Proto, "upload").and.callThrough();
+		spyOn(s3Proto, "getObject").and.callThrough();
+		spyOn(s3Proto, "deleteObject").and.callThrough();
 
 		mockAWS.S3.prototype = s3Proto;
 
@@ -36,7 +36,13 @@ describe("AWS S3 proxy", function() {
 				return {
 					mime: "mime"
 				};
-			}
+			},
+			path: {
+				basename: jasmine.createSpy(),
+				extname: jasmine.createSpy(),
+
+			},
+			dateformat: jasmine.createSpy()
 		});
 	});
 
@@ -134,8 +140,8 @@ describe("AWS S3 proxy", function() {
 				expect(s3Proto.listObjects).toHaveBeenCalled();
 			});
 
-			it("createOne", function() {
-				proxy.createOne();
+			fit("createOne", function() {
+				proxy.createOne({buffer: "asdf"}, (err, response) => {console.log(response, err)});
 				expect(s3Proto.upload).toHaveBeenCalled();
 				expect(s3Proto.upload.calls.argsFor(0)[0].ContentType).toBe("mime");
 			});

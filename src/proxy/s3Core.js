@@ -89,6 +89,10 @@ module.exports = function(dependencies) {
 		}
 
 		function createOne(data, filter, callback) {
+			if(!data) {
+				return callback(new Error("no data")); 
+			}
+
 			if (typeof callback === "undefined") {
 				callback = filter;
 				filter = null;
@@ -96,7 +100,7 @@ module.exports = function(dependencies) {
 
 			var id = generateId(data);
 			var dirName;
-
+			console.log(id);
 			if (getBinaryDirNameFromFilter) {
 				dirName = getBinaryDirNameFromFilter(filter);
 			}
@@ -107,7 +111,10 @@ module.exports = function(dependencies) {
 				ContentType: fileType(data.buffer).mime
 			};
 
+			console.log("ASD");
+
 			s3.listObjects({ Bucket:config.bucket, Prefix: dirName ? dirName + "/" + id : id }, function(err, objectList) {
+				console.log("ASDASD", err, objectList);
 				if (err) {
 					return callback(err);
 				}
