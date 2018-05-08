@@ -136,28 +136,28 @@ describe("AWS S3 proxy", function() {
 
 		describe("behaviour", function() {
 			it("read", function() {
-				proxy.read();
+				proxy.read({buffer: "asdf"}, (err, response) => {console.log(response, err);});
 				expect(s3Proto.listObjects).toHaveBeenCalled();
 			});
 
-			fit("createOne", function() {
-				proxy.createOne({buffer: "asdf"}, (err, response) => {console.log(response, err)});
+			it("createOne", function() {
+				proxy.createOne({buffer: "asdf"}, (err, response) => {console.log(response, err);});
 				expect(s3Proto.upload).toHaveBeenCalled();
 				expect(s3Proto.upload.calls.argsFor(0)[0].ContentType).toBe("mime");
 			});
 
 			it("readOneById", function() {
-				proxy.readOneById();
+				proxy.readOneById({buffer: "asdf"}, (err, response) => {console.log(response, err);});
 				expect(s3Proto.getObject).toHaveBeenCalled();
 			});
 
 			it("updateOneById", function() {
-				proxy.updateOneById();
+				proxy.updateOneById({buffer: "asdf"}, {}, (err, response) => {console.log(response, err);});
 				expect(s3Proto.upload).toHaveBeenCalled();
 			});
 
 			it("destroyOneById", function() {
-				proxy.destroyOneById();
+				proxy.destroyOneById({buffer: "asdf"}, (err, response) => {console.log(response, err);});
 				expect(s3Proto.deleteObject).toHaveBeenCalled();
 			});
 		});
