@@ -107,15 +107,15 @@ module.exports = function(dependencies) {
 				ContentType: fileType(data.buffer).mime
 			};
 
-			s3.listObjects({ Bucket:config.bucket, Prefix: dirName + "/" + id }, function(err, objectList) {
+			s3.listObjects({ Bucket:config.bucket, Prefix: dirName ? dirName + "/" + id : id }, function(err, objectList) {
 				if (err) {
 					return callback(err);
 				}
 
-				params.Key = `${dirName}/${path.basename(id)}`;
+				params.Key = dirName ? `${dirName}/${path.basename(id)}` : path.basename(id);
 				if (objectList.Contents.length > 0) {
 					var name = `${path.basename(id, path.extname(id))}_${dateformat(Date.now(), "yyyy-mm-ddTHH.MM.ss.l")}${path.extname(id)}`;
-					params.Key = `${dirName}/${name}`;
+					params.Key = dirName? `${dirName}/${name}` : name;
 					data.file.name = name;
 				}
 
