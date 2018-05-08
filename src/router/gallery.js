@@ -220,7 +220,7 @@ module.exports = function createGalleryRouter(config) {
 				binaryProxy.createOne(
 				{
 					buffer: data.buffer,
-					name: data.file.name
+					file: data.file
 				},
 					req.filter,
 					function(err, response) {
