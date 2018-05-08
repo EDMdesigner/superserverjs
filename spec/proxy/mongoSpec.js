@@ -58,7 +58,11 @@ describe("Mongo proxy", function() {
 				},
 
 				findOne: function(id, callback) {
-					callback(null, {});
+					callback(null, {
+						remove: (callback) => {
+							callback(null);
+						}
+					});
 				},
 
 				findOneAndUpdate: function(id, data, options, callback) {
@@ -212,7 +216,7 @@ describe("Mongo proxy", function() {
 					},
 
 					exec: function(callback) {
-						callback(null, {});
+						callback(null, []);
 					},
 
 					count: function(query, callback) {
@@ -256,7 +260,7 @@ describe("Mongo proxy", function() {
 				
 				mongoProxy.readOneById({}, {user: "User1"}, (err, result) => {
 					expect(mockModel.aggregate).toHaveBeenCalled();
-					expect(typeof result).toBe("object");
+					expect(typeof result).toBe("undefined");
 					expect(err).toBe(null);
 				});
 

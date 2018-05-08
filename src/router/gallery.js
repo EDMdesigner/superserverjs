@@ -250,13 +250,18 @@ module.exports = function createGalleryRouter(config) {
 				return res.send({"err": err, "success": false});
 			}
 			response.file = data.file;
-			var info = createInfoObject(response, req);
-
-			infoProxy.createOne(
-				info,
-				req.filter,
-				createResponseHandlerWithHooks(config, req, res, "post")
-			);
+			createInfoObject({
+				binaryResponse: response, 
+				req: req,
+				res: res
+			},
+			function(info){
+				infoProxy.createOne(
+					info,
+					req.filter,
+					createResponseHandlerWithHooks(config, req, res, "post")
+				);
+			});
 		});
 	}
 
@@ -264,7 +269,9 @@ module.exports = function createGalleryRouter(config) {
 		var contentType = req.get("Content-Type");
 
 		if (contentType.toLowerCase().indexOf("application/json") > -1) {
-			if (downloadImagesFromUrl) {
+			//Then it is an url
+
+			if (req.body.downloadImagesFromUrl || downloadImagesFromUrl) {
 				// if image should be downloaded
 				download({
 					req: req,
@@ -274,32 +281,31 @@ module.exports = function createGalleryRouter(config) {
 				});
 			} else {
 				// if image should be referenced with original URL
-				var url = req.body[fromUrlProp];
-				var slicedUrl = url.split("/");
-				var info = {
-					title: slicedUrl[slicedUrl.length - 1],
-					url: req.body[fromUrlProp],
-					createdAt: new Date()
-				};
-
-				getInfoProxy(req, function(err, infoProxy) {
-					if (err) {
-						return res.send({"err": err, "success": false});
-					}
-
-					checkProxy({
-						proxy: infoProxy,
-						msgPrefix: "infoProxy"
+				createInfoObject({
+					req: req,
+					res: res
+				},
+				function(info){
+					getInfoProxy(req, function(err, infoProxy) {
+						if (err) {
+							return res.send({"err": err, "success": false});
+						}
+	
+						checkProxy({
+							proxy: infoProxy,
+							msgPrefix: "infoProxy"
+						});
+	
+						infoProxy.createOne(
+							info,
+							req.filter,
+							createResponseHandlerWithHooks(config, req, res, "post")
+						);
 					});
-
-					infoProxy.createOne(
-						info,
-						req.filter,
-						createResponseHandlerWithHooks(config, req, res, "post")
-					);
 				});
 			}
 		} else {
+			// Then it is a file
 			fs.readFile(req.body[fileUploadProp].path, function(err, buffer) {
 				var data = {
 					file: req.body.file,

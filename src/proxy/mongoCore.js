@@ -41,7 +41,7 @@ module.exports = function(dependencies) {
 
 			async.parallel({
 				items: getItems.bind(null, query),
-				count: getItemCount.bind(null, query)
+				count: getItemCount.bind(null, filter)
 			}, function(err, result) {
 				if (err) {
 					return callback(err);
@@ -57,50 +57,26 @@ module.exports = function(dependencies) {
 		function getItems(query, done) {
 			var model = Model;
 
-			if(config.foreignFields) {
-				config.foreignFields.forEach((item) => {
-					if(query.find.hasOwnProperty(item)) {
-						query.find[item] = objectId(query.find[item]);
-					}
-				});
-			}
+			let foreignFields = config.foreignFields || [];
+			let otherFields = config.otherFields || [];
 
-			if(config.populate) {
-				let aggregateArray = [{$lookup: config.populate}];
-				
-				if(query.find) {
-					aggregateArray.push({$match: query.find});
+			foreignFields.forEach((item) => {
+				if(query.find.hasOwnProperty(item)) {
+					query.find[item] = objectId(query.find[item]);
 				}
-				
-				if(query.sort) {
-					aggregateArray.push({$sort: query.sort});
-				}
+			});
 
-				if(query.skip) {
-					aggregateArray.push({$skip: query.skip});
-				}
-
-				if(query.limit) {
-					aggregateArray.push({$limit: query.limit});
-				}
-
-				model
-					.aggregate(aggregateArray)
-					.exec((err, result) => {
-						result.forEach((item, index, array) => {
-							array[index][config.populate.as] = item[config.populate.as][0];
-						});
-
-						done(err, result);
-					});
-					
-			} else {
+			if (!config.populate && !config.populateArrayField) {
 				if (query.find) {
 					model = model.find(query.find);
 				}
 	
 				if (query.sort) {
 					model = model.sort(query.sort);
+				}
+
+				if(query.select) {
+					model = model.select(query.select);
 				}
 	
 				if (typeof query.skip === "number") {
@@ -109,16 +85,142 @@ module.exports = function(dependencies) {
 	
 				if (typeof query.limit === "number") {
 					model = model.limit(query.limit);
-				}	
+				}
 
-				model.exec((err, result) => {
+				return model.exec((err, result) => {
 					done(err, result);
 				});
 			}
+
+			let aggregateArray = [];
+
+			if(config.populate) {
+				if (!Array.isArray(config.populate)) {
+					config.populate = [ config.populate ];
+				}
+				config.populate.forEach(item => {
+					aggregateArray = aggregateArray.concat([
+						{
+							$lookup: item
+						},
+						{
+							$unwind: "$" + item.as // unwrapping the resulting one-element array
+						}
+					]);
+				});
+			}
+
+			if (config.populateArrayField) {
+				if (!Array.isArray(config.populateArrayField)) {
+					config.populateArrayField = [ config.populateArrayField ];
+				}
+
+				config.populateArrayField.forEach(item => {
+					aggregateArray = aggregateArray.concat([
+						{
+							$unwind: { // creates multiple documents by "splitting" the array field
+								path: "$" + item.localField,
+								preserveNullAndEmptyArrays: true
+							}
+						},
+						{
+							$lookup: item
+						},
+						{
+							$unwind: { // unwrapping the resulting one-element array
+								path: "$" + item.as,
+								preserveNullAndEmptyArrays: true
+							}
+						}
+					]);
+
+					let group = {
+						_id: "$_id",
+						[item.localField]: {
+							$push: "$" + item.localField
+						},
+						[item.as]: {
+							$push: "$" + item.as
+						}
+					};
+
+					config.populateArrayField.forEach(otherPopulateItem => {
+						if (otherPopulateItem !== item) {
+							group[otherPopulateItem.as] = {
+								$first: "$" + otherPopulateItem.as
+							};
+							group[otherPopulateItem.localField] = {
+								$first: "$" + otherPopulateItem.localField
+							};
+						}
+					});
+
+					config.populate.forEach(otherPopulateItem => {
+						group[otherPopulateItem.as] = {
+							$first: "$" + otherPopulateItem.as
+						};
+						group[otherPopulateItem.localField] = {
+							$first: "$" + otherPopulateItem.localField
+						};
+					});
+
+					foreignFields.forEach((field) => {
+						group[field] = {
+							$first: "$" + field
+						};
+					});
+
+					otherFields.forEach((field) => {
+						group[field] = {
+							$first: "$" + field
+						};
+					});
+
+					aggregateArray.push({
+						$group: group
+					});
+				});
+			}
+				
+			if(query.find) {
+				aggregateArray.push({
+					$match: query.find
+				});
+			}
+			
+			if(query.sort) {
+				aggregateArray.push({
+					$sort: query.sort
+				});
+			}
+
+			if(query.select) {
+				aggregateArray.push({
+					$select: query.select
+				});
+			}
+
+			if(query.skip) {
+				aggregateArray.push({
+					$skip: query.skip
+				});
+			}
+
+			if(query.limit) {
+				aggregateArray.push({
+					$limit: query.limit
+				});
+			}
+
+			model
+				.aggregate(aggregateArray)
+				.exec((err, result) => {
+					done(err, result);
+			});
 		}
 
 		function getItemCount(query, done) {
-			Model.count(query.find, function(err, result) {
+			Model.count(query, function(err, result) {
 				done(err, result);
 			});
 		}
@@ -144,6 +246,9 @@ module.exports = function(dependencies) {
 				filter = null;
 			}
 
+			let foreignFields = config.foreignFields || [];
+			let otherFields = config.otherFields || [];
+
 			var find = {
 				_id: objectId(id)
 			};
@@ -152,36 +257,117 @@ module.exports = function(dependencies) {
 				extend(find, filter);	
 			}
 
-			if(config.foreignFields) {
-				config.foreignFields.forEach((item) => {
-					if(find.hasOwnProperty(item)) {
-						find[item] = objectId(find[item]);
-					}
+			foreignFields.forEach((item) => {
+				if(find.hasOwnProperty(item)) {
+					find[item] = objectId(find[item]);
+				}
+			});
+
+			if (!config.populate && !config.populateArrayField) {
+				return Model.findOne(find, function(err, result) {
+					callback(err, result);
 				});
 			}
 
-			if(config.populate) {
-				Model
-					.aggregate([
+			let aggregateArray = [];
+
+			if (config.populate) {
+				if (!Array.isArray(config.populate)) {
+					config.populate = [ config.populate ];
+				}
+				config.populate.forEach(item => {
+					aggregateArray = aggregateArray.concat([
 						{
-							$lookup: config.populate
+							$lookup: item
 						},
 						{
-							$match: find
+							$unwind: "$" + item.as // unwrapping the resulting one-element array
 						}
-					])
-					.exec((err, result) => {
-						if(Object.keys(result).length !== 0) {
-							result[config.populate.as] = result[config.populate.as][0];
-						}
-
-						callback(err, result);	
-					});
-			} else {
-				Model.findOne(find, function(err, result) {
-					callback(err, result);
-				}); 
+					]);
+				});
 			}
+
+			if (config.populateArrayField) {
+				if (!Array.isArray(config.populateArrayField)) {
+					config.populateArrayField = [ config.populateArrayField ];
+				}
+
+				config.populateArrayField.forEach(item => {
+					aggregateArray = aggregateArray.concat([
+						{
+							$unwind: { // creates multiple documents by "splitting" the array field
+								path: "$" + item.localField,
+								preserveNullAndEmptyArrays: true
+							}
+						},
+						{
+							$lookup: item
+						},
+						{
+							$unwind: { // unwrapping the resulting one-element array
+								path: "$" + item.as,
+								preserveNullAndEmptyArrays: true
+							}
+						}
+					]);
+
+					let group = {
+						_id: "$_id",
+						[item.localField]: {
+							$push: "$" + item.localField
+						},
+						[item.as]: {
+							$push: "$" + item.as
+						}
+					};
+
+					config.populateArrayField.forEach(otherPopulateItem => {
+						if (otherPopulateItem !== item) {
+							group[otherPopulateItem.as] = {
+								$first: "$" + otherPopulateItem.as
+							};
+							group[otherPopulateItem.localField] = {
+								$first: "$" + otherPopulateItem.localField
+							};
+						}
+					});
+
+					config.populate.forEach(otherPopulateItem => {
+						group[otherPopulateItem.as] = {
+							$first: "$" + otherPopulateItem.as
+						};
+						group[otherPopulateItem.localField] = {
+							$first: "$" + otherPopulateItem.localField
+						};
+					});
+
+					foreignFields.forEach((field) => {
+						group[field] = {
+							$first: "$" + field
+						};
+					});
+
+					otherFields.forEach((field) => {
+						group[field] = {
+							$first: "$" + field
+						};
+					});
+
+					aggregateArray.push({
+						$group: group
+					});
+
+					aggregateArray.push({
+						$match: find
+					});
+				});
+			}
+
+			Model
+				.aggregate(aggregateArray)
+				.exec((err, result) => {
+					callback(err, result[0]);
+			});
 		}
 
 
@@ -200,7 +386,11 @@ module.exports = function(dependencies) {
 			}
 
 			Model.findOneAndUpdate(find, newData, {new: true}, function(err, result) {
-				callback(err, result);
+				if(err) {
+					callback(err, result);
+				} else {
+					readOneById(id, filter, callback);
+				}
 			});
 		}
 
@@ -220,7 +410,11 @@ module.exports = function(dependencies) {
 			}
 
 			Model.findOneAndUpdate(find, newData, {new: true}, function(err, result) {
-				callback(err, result);
+				if(err) {
+					callback(err, result);
+				} else {
+					readOneById(id, filter, callback);
+				}
 			});
 		}
 
@@ -239,8 +433,12 @@ module.exports = function(dependencies) {
 				extend(find, filter);	
 			}
 
-			Model.findOneAndRemove(find, function(err, result) {
-				callback(err, result);
+			Model.findOne(find, (err, result) => {
+				if(err) {
+					return callback(err);
+				}
+
+				result.remove(callback);
 			});
 		}
 

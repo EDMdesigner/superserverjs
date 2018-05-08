@@ -55,6 +55,10 @@ module.exports = function createCRUDRouter(config) {
 			query.sort = objectify(query.sort);
 		}
 
+		if(query.select) {
+			query.select = query.select;
+		}
+
 		if(query.skip) {
 			query.skip = intify(query.skip, 0);
 		}
