@@ -56,8 +56,9 @@ module.exports = function createFileProxy(config) {
 			filter = null;
 		}
 
-		var id = generateId();
-		fs.writeFile(basePath + id, data, encoding, function(err) {
+		var id = generateId(data);
+
+		fs.writeFile(basePath + id, data.buffer, encoding, function(err) {
 			var retObj = {};
 			retObj[idProperty] = id;
 			retObj.Location = localUrlPrefix + id;

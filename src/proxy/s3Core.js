@@ -15,6 +15,14 @@ module.exports = function(dependencies) {
 		throw new Error("fileType module dependency is mandatory!");
 	}
 
+	if (!dependencies.path) {
+		throw new Error("path module dependency is mandatory!");
+	}
+
+	if (!dependencies.dateformat) {
+		throw new Error("dateformat module dependency is mandatory!");
+	}
+
 	return function createS3Proxy(config) {
 		config = config || {};
 
@@ -41,6 +49,7 @@ module.exports = function(dependencies) {
 		var fileType = dependencies.fileType;
 		var generateId = config.generateId || dependencies.generateId();
 		var AWS = dependencies.AWS;
+		var dateformat = dependencies.dateformat;
 		var s3 = new AWS.S3({
 			accessKeyId: config.accessKeyId,
 			secretAccessKey: config.secretAccessKey,
@@ -49,6 +58,7 @@ module.exports = function(dependencies) {
 				Bucket: config.bucket
 			}
 		});
+		var path = dependencies.path;
 
 		var getBinaryDirNameFromFilter = config.getBinaryDirNameFromFilter;
 
@@ -79,31 +89,52 @@ module.exports = function(dependencies) {
 		}
 
 		function createOne(data, filter, callback) {
+			if(!data) {
+				return callback(new Error("no data")); 
+			}
+
 			if (typeof callback === "undefined") {
 				callback = filter;
 				filter = null;
 			}
 
-			var myKey = generateId(data);
-
+			var id = generateId(data);
+			var dirName;
+			console.log(id);
 			if (getBinaryDirNameFromFilter) {
-				myKey = getBinaryDirNameFromFilter(filter) + "/" + generateId(data);
+				dirName = getBinaryDirNameFromFilter(filter);
 			}
 
 			var params = {
-				Key: myKey,
-				Body: data,
+				Body: data.buffer,
 				ACL: "public-read",
-				ContentType: fileType(data).mime
+				ContentType: fileType(data.buffer).mime
 			};
 
-			s3.upload(params, function(err, data) {
+			console.log("ASD");
+
+			s3.listObjects({ Bucket:config.bucket, Prefix: dirName ? dirName + "/" + id : id }, function(err, objectList) {
+				console.log("ASDASD", err, objectList);
 				if (err) {
 					return callback(err);
 				}
 
-				callback(null, data);
+				params.Key = dirName ? `${dirName}/${path.basename(id)}` : path.basename(id);
+				if (objectList.Contents.length > 0) {
+					var name = `${path.basename(id, path.extname(id))}_${dateformat(Date.now(), "yyyy-mm-ddTHH.MM.ss.l")}${path.extname(id)}`;
+					params.Key = dirName? `${dirName}/${name}` : name;
+					data.file.name = name;
+				}
+
+				s3.upload(params, function(err, data) {
+					if (err) {
+						return callback(err);
+					}
+	
+					callback(null, data);
+				});
 			});
+
 		}
 
 		function readOneById(id, filter, callback) {

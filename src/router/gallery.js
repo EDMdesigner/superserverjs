@@ -218,7 +218,7 @@ module.exports = function createGalleryRouter(config) {
 			},
 			function(binaryProxy, callback) {
 				binaryProxy.createOne(
-					data.buffer,
+					data,
 					req.filter,
 					function(err, response) {
 						if (err) {
