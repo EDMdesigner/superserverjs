@@ -1,6 +1,6 @@
 {
   "name": "superserverjs",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "Superdata motivated server side modules. (Proxies & routers.)",
   "main": "src/main.js",
   "scripts": {
@@ -34,7 +34,7 @@
   "homepage": "https://github.com/EDMdesigner/superserverjs#readme",
   "devDependencies": {
     "body-parser": "^1.15.0",
-    "edm-supergulp": "latest",
+    "edm-supergulp": "0.2.7",
     "express-formidable": "^0.1.2",
     "form-data": "^1.0.0-rc4",
     "gulp": "^3.9.1",
